@@ -1,10 +1,16 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import { ThemeProvider } from "./components/theme-provider";
+import App from "./App.jsx";
 import "./index.css";
-import AudioRecorder from "./component/AudioRecorder.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <AudioRecorder />
+    <BrowserRouter>
+      <ThemeProvider defaultTheme="light" storageKey="voiceauth-theme">
+        <App />
+      </ThemeProvider>
+    </BrowserRouter>
   </StrictMode>
 );
