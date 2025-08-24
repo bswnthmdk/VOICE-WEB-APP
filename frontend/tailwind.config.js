@@ -38,11 +38,11 @@ export default {
         input: "var(--color-input)",
         ring: "var(--color-ring)",
         chart: {
-          "1": "var(--color-chart-1)",
-          "2": "var(--color-chart-2)",
-          "3": "var(--color-chart-3)",
-          "4": "var(--color-chart-4)",
-          "5": "var(--color-chart-5)",
+          1: "var(--color-chart-1)",
+          2: "var(--color-chart-2)",
+          3: "var(--color-chart-3)",
+          4: "var(--color-chart-4)",
+          5: "var(--color-chart-5)",
         },
         sidebar: {
           DEFAULT: "var(--color-sidebar)",
