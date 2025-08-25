@@ -98,7 +98,7 @@ export default function UserDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Header
-        showLogout={true}
+        showLogout={false}
         title="User Panel"
         subtitle={`Welcome back, ${userProfile.name}`}
       />

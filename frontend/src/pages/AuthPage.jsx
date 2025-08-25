@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,24 +10,30 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Moon, Sun, ArrowLeft, User, Shield, Mic } from "lucide-react";
+import { Moon, Sun, ArrowLeft, Mic } from "lucide-react";
 import Link from "@/components/ui/link";
 import { useTheme } from "@/components/theme-provider";
 
 export default function AuthPage() {
-  const [mode, setMode] = useState("admin-login"); // removed TS type
+  const [mode, setMode] = useState("login"); // "login" | "signup"
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
-  const isAdmin = mode.includes("admin");
-  const isLogin = mode.includes("login");
+  const isLogin = mode === "login";
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (isAdmin && isLogin) navigate("/admin");
-    else if (!isAdmin && isLogin) navigate("/user");
-    else alert("Account created successfully!");
+    if (isLogin) {
+      // Set authentication state
+      localStorage.setItem("isAuthenticated", "true");
+      // You would typically also store user info, tokens etc. here
+
+      navigate("/dashboard");
+    } else {
+      alert("Account created successfully!");
+      setMode("login"); // go back to login after signup
+    }
   };
 
   const handleForgotPassword = (e) => {
@@ -36,7 +42,7 @@ export default function AuthPage() {
     setShowForgotPassword(false);
   };
 
-  // Render forgot password form
+  // ----------------- Forgot Password Form -----------------
   if (showForgotPassword) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -56,8 +62,8 @@ export default function AuthPage() {
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
             className="relative"
           >
-            <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <Sun className="h-[1.2rem] w-[1.2rem] transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-[1.2rem] w-[1.2rem] transition-all rotate-90 scale-0 dark:rotate-0 dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
           </Button>
         </div>
@@ -118,10 +124,10 @@ export default function AuthPage() {
     );
   }
 
-  // Main login/signup form
+  // ----------------- Login / Signup Form -----------------
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      {/* top buttons */}
+      {/* Top Buttons */}
       <div className="absolute top-4 left-4">
         <Link href="/">
           <Button variant="ghost" size="sm">
@@ -137,12 +143,13 @@ export default function AuthPage() {
           onClick={() => setTheme(theme === "light" ? "dark" : "light")}
           className="relative"
         >
-          <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          <Sun className="h-[1.2rem] w-[1.2rem] transition-all dark:-rotate-90 dark:scale-0" />
+          <Moon className="absolute h-[1.2rem] w-[1.2rem] transition-all rotate-90 scale-0 dark:rotate-0 dark:scale-100" />
           <span className="sr-only">Toggle theme</span>
         </Button>
       </div>
 
+      {/* The Card */}
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
@@ -170,51 +177,29 @@ export default function AuthPage() {
             {isLogin ? "Sign in to your account" : "Get started with VoiceAuth"}
           </CardDescription>
         </CardHeader>
+
         <CardContent>
-          {/* mode buttons */}
-          <div className="grid grid-cols-2 gap-2 mb-6">
-            <div className="grid grid-cols-2 gap-1">
-              <Button
-                variant={mode === "admin-login" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setMode("admin-login")}
-                className="text-xs"
-              >
-                <Shield className="w-3 h-3 mr-1" />
-                Admin
-              </Button>
-              <Button
-                variant={mode === "user-login" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setMode("user-login")}
-                className="text-xs"
-              >
-                <User className="w-3 h-3 mr-1" />
-                User
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 gap-1">
-              <Button
-                variant={mode.includes("login") ? "default" : "outline"}
-                size="sm"
-                onClick={() => setMode(isAdmin ? "admin-login" : "user-login")}
-                className="text-xs"
-              >
-                Login
-              </Button>
-              <Button
-                variant={mode.includes("signup") ? "default" : "outline"}
-                size="sm"
-                onClick={() =>
-                  setMode(isAdmin ? "admin-signup" : "user-signup")
-                }
-                className="text-xs"
-              >
-                Signup
-              </Button>
-            </div>
+          {/* Mode Switch */}
+          <div className="grid grid-cols-2 gap-1 mb-6">
+            <Button
+              variant={isLogin ? "default" : "outline"}
+              size="sm"
+              onClick={() => setMode("login")}
+              className="text-xs"
+            >
+              Login
+            </Button>
+            <Button
+              variant={!isLogin ? "default" : "outline"}
+              size="sm"
+              onClick={() => setMode("signup")}
+              className="text-xs"
+            >
+              Signup
+            </Button>
           </div>
 
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <>
@@ -240,6 +225,7 @@ export default function AuthPage() {
               </>
             )}
 
+            {/* Common Fields */}
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <Input id="username" placeholder="Enter username" required />
@@ -256,27 +242,15 @@ export default function AuthPage() {
             </div>
 
             {!isLogin && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="Confirm password"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="uniqueId">
-                    {isAdmin ? "Unique Lock ID" : "Unique Panel ID"}
-                  </Label>
-                  <Input
-                    id="uniqueId"
-                    placeholder={`Enter ${isAdmin ? "lock" : "panel"} ID`}
-                    required
-                  />
-                </div>
-              </>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Confirm password"
+                  required
+                />
+              </div>
             )}
 
             <Button type="submit" className="w-full">
