@@ -8,8 +8,6 @@ import { cn } from "@/lib/utils";
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" };
 
-// ChartConfig type removed
-
 const ChartContext = React.createContext(null);
 
 function useChart() {
@@ -48,7 +46,7 @@ function ChartContainer({ id, className, children, config, ...props }) {
 
 const ChartStyle = ({ id, config }) => {
   const colorConfig = Object.entries(config).filter(
-    ([, config]) => config.theme || config.color
+    ([, cfg]) => cfg.theme || cfg.color
   );
 
   if (!colorConfig.length) {
@@ -79,16 +77,20 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
 
-function ChartTooltip({
+function ChartTooltipWrapper({
   className,
   active,
   payload,
   label,
-  config,
   hideLabel,
   hideIndicator,
   indicator = "line",
   nameKey,
+  labelKey,
+  labelFormatter,
+  formatter,
+  color,
+  labelClassName,
   ...props
 }) {
   const { config } = useChart();
@@ -213,7 +215,7 @@ function ChartTooltip({
 
 const ChartLegend = RechartsPrimitive.Legend;
 
-function ChartLegend({
+function ChartLegendWrapper({
   className,
   payload,
   verticalAlign = "bottom",
@@ -264,7 +266,7 @@ function ChartLegend({
   );
 }
 
-// Helper to extract item config from a payload.
+// Helper
 function getPayloadConfigFromPayload(config, payload, key) {
   if (typeof payload !== "object" || payload === null) {
     return undefined;
@@ -295,8 +297,8 @@ function getPayloadConfigFromPayload(config, payload, key) {
 export {
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
+  ChartTooltipWrapper,
   ChartLegend,
-  ChartLegendContent,
+  ChartLegendWrapper,
   ChartStyle,
 };
