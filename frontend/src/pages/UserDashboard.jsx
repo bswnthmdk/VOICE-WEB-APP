@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,12 +24,24 @@ import {
 } from "lucide-react";
 
 export default function UserDashboard() {
+  const navigate = useNavigate();
   const [isRecording, setIsRecording] = useState(false);
 
   // Mock user data
-  const userProfile = {
+  const [user] = useState({
     name: "John Doe",
     email: "john.doe@company.com",
+    role: "user",
+    avatar: "JD",
+  });
+
+  const handleLogout = () => {
+    navigate("/auth");
+  };
+
+  const userProfile = {
+    name: user.name,
+    email: user.email,
     panelId: "PANEL001",
     status: "active",
     joinedDate: "March 15, 2024",
@@ -98,7 +111,8 @@ export default function UserDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Header
-        showLogout={false}
+        user={user}
+        onLogout={handleLogout}
         title="User Panel"
         subtitle={`Welcome back, ${userProfile.name}`}
       />

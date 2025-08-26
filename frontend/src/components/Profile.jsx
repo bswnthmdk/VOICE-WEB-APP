@@ -19,7 +19,13 @@ export default function Profile({ user, onLogout }) {
         >
           <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center transition-colors">
             <span className="text-sm font-medium text-foreground">
-              {user?.avatar || user?.name?.charAt(0) || "U"}
+              {user?.avatar || user?.name
+                ? user.name
+                    .split(" ")
+                    .map((word) => word.charAt(0))
+                    .slice(0, 2)
+                    .join("")
+                : "U"}
             </span>
           </div>
         </Button>

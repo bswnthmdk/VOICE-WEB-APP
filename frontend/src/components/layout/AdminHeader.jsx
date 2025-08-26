@@ -1,28 +1,15 @@
-import { Moon, Sun } from "lucide-react";
-import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
-import { LogOut, Mic } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Moon, Sun, Mic, MessageCircle, Bell } from "lucide-react";
+import { useTheme } from "@/components/theme-provider";
 import Profile from "@/components/Profile";
 
-export function Header({
-  showLogout = false,
-  title,
-  subtitle,
-  user = null,
-  onLogout = null,
+export function AdminHeader({
+  user,
+  onLogout,
+  title = "Admin Dashboard",
+  subtitle = "Welcome back, Administrator",
 }) {
   const { theme, setTheme } = useTheme();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    if (onLogout) {
-      onLogout();
-    } else {
-      // Simulate logout
-      navigate("/");
-    }
-  };
 
   return (
     <header className="border-b border-border bg-card">
@@ -44,25 +31,23 @@ export function Header({
               </span>
             </div>
           </div>
-          {title && (
-            <>
-              <div className="h-6 w-px bg-border" />
-              <div>
-                <h1 className="font-serif text-xl font-semibold">{title}</h1>
-                {subtitle && (
-                  <p className="text-sm text-muted-foreground">{subtitle}</p>
-                )}
-              </div>
-            </>
-          )}
+          <div className="h-6 w-px bg-border" />
+          <div>
+            <h1 className="font-serif text-xl font-semibold">{title}</h1>
+            <p className="text-sm text-muted-foreground">{subtitle}</p>
+          </div>
         </div>
         <div className="flex items-center gap-4">
-          {showLogout && !user && (
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
+          <Button variant="outline" size="sm">
+            <MessageCircle className="w-4 h-4 mr-2" />
+            Chat
+          </Button>
+          <div className="relative">
+            <Button variant="outline" size="icon">
+              <Bell className="w-4 h-4" />
             </Button>
-          )}
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
+          </div>
           <Button
             variant="outline"
             size="icon"
@@ -73,7 +58,7 @@ export function Header({
             <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
           </Button>
-          {user && <Profile user={user} onLogout={handleLogout} />}
+          <Profile user={user} onLogout={onLogout} />
         </div>
       </div>
     </header>
