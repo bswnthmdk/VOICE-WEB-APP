@@ -5,7 +5,12 @@ import { LogOut, Mic } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Profile from "@/components/Profile";
 
-export function Header({ showLogout = false, title, subtitle, user = null }) {
+export function UserHeader({
+  showLogout = false,
+  title,
+  subtitle,
+  user = null,
+}) {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
