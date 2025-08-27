@@ -33,6 +33,7 @@ import {
 
 export default function UserDashboard() {
   const [showConnectModal, setShowConnectModal] = useState(false);
+  const [showLockModal, setShowLockModal] = useState(false);
   const [selectedLock, setSelectedLock] = useState(null);
   const [connectData, setConnectData] = useState({
     lockId: "",
@@ -51,6 +52,7 @@ export default function UserDashboard() {
     {
       id: "LOCK001",
       name: "Main Office Door",
+      adminName: "Alice Johnson",
       status: "connected",
       isOpen: false,
       location: "Building A, Floor 1",
@@ -62,6 +64,7 @@ export default function UserDashboard() {
     {
       id: "LOCK002",
       name: "Conference Room A",
+      adminName: "Bob Smith",
       status: "connected",
       isOpen: true,
       location: "Building A, Floor 2",
@@ -73,6 +76,7 @@ export default function UserDashboard() {
     {
       id: "LOCK003",
       name: "Storage Room",
+      adminName: "Carol Davis",
       status: "connected",
       isOpen: false,
       location: "Building B, Basement",
@@ -84,6 +88,7 @@ export default function UserDashboard() {
     {
       id: "LOCK004",
       name: "Server Room",
+      adminName: "David Wilson",
       status: "connected",
       isOpen: false,
       location: "Building A, Floor 3",
@@ -104,6 +109,7 @@ export default function UserDashboard() {
     const newLock = {
       id: connectData.lockId,
       name: `Lock ${connectData.lockId}`,
+      adminName: "Unknown Admin",
       status: "connected",
       isOpen: false,
       location: "Unknown Location",
@@ -129,12 +135,14 @@ export default function UserDashboard() {
     ) {
       setConnectedLocks((prev) => prev.filter((lock) => lock.id !== lockId));
       setSelectedLock(null);
+      setShowLockModal(false);
       alert("Lock disconnected successfully!");
     }
   };
 
   const handleLockClick = (lock) => {
-    setSelectedLock(selectedLock?.id === lock.id ? null : lock);
+    setSelectedLock(lock);
+    setShowLockModal(true);
   };
 
   const getSignalIcon = (strength) => {
@@ -210,11 +218,7 @@ export default function UserDashboard() {
             {connectedLocks.map((lock) => (
               <Card
                 key={lock.id}
-                className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-                  selectedLock?.id === lock.id
-                    ? "ring-2 ring-primary border-primary shadow-md"
-                    : "hover:border-primary/50"
-                }`}
+                className="cursor-pointer transition-all duration-200 hover:shadow-md hover:border-primary/50"
                 onClick={() => handleLockClick(lock)}
               >
                 <CardHeader className="pb-3">
@@ -237,14 +241,17 @@ export default function UserDashboard() {
                         <CardTitle className="text-base leading-tight truncate">
                           {lock.name}
                         </CardTitle>
-                        <p className="text-xs text-muted-foreground font-mono">
-                          {lock.id}
+                        <p className="text-xs text-muted-foreground">
+                          Admin: {lock.adminName}
                         </p>
                       </div>
                     </div>
                     <Badge
-                      variant={lock.isOpen ? "destructive" : "secondary"}
-                      className="text-xs shrink-0"
+                      className={`text-xs shrink-0 ${
+                        lock.isOpen
+                          ? "bg-green-500 hover:bg-green-600 text-white border-green-500"
+                          : "bg-red-500 hover:bg-red-600 text-white border-red-500"
+                      }`}
                     >
                       {lock.isOpen ? "Open" : "Closed"}
                     </Badge>
@@ -252,99 +259,88 @@ export default function UserDashboard() {
                 </CardHeader>
 
                 <CardContent className="pt-0">
-                  {/* Quick Info - Always Visible */}
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <MapPin className="w-3 h-3 shrink-0" />
-                      <span className="truncate">{lock.location}</span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-muted-foreground" />
-                        <span className="text-muted-foreground">
-                          Last: {lock.lastAccess}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {getSignalIcon(lock.signalStrength)}
-                        <div className="flex items-center gap-1">
-                          <Battery
-                            className={`w-3 h-3 ${getBatteryColor(
-                              lock.batteryLevel
-                            )}`}
-                          />
-                          <span
-                            className={`text-xs ${getBatteryColor(
-                              lock.batteryLevel
-                            )}`}
-                          >
-                            {lock.batteryLevel}%
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Expanded Details - Show when selected */}
-                  {selectedLock?.id === lock.id && (
-                    <div className="mt-4 pt-4 border-t space-y-3">
-                      <div className="grid grid-cols-2 gap-3 text-xs">
-                        <div>
-                          <p className="text-muted-foreground">Status</p>
-                          <Badge variant="outline" className="text-xs mt-1">
-                            <Wifi className="w-3 h-3 mr-1" />
-                            Connected
-                          </Badge>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Signal</p>
-                          <div className="flex items-center gap-1 mt-1">
-                            {getSignalIcon(lock.signalStrength)}
-                            <span className="capitalize text-xs">
-                              {lock.signalStrength}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="col-span-2">
-                          <p className="text-muted-foreground">
-                            Connected Since
-                          </p>
-                          <p className="text-sm mt-1">{lock.connectedSince}</p>
-                        </div>
-                      </div>
-
-                      {/* Action Button */}
-                      <div className="flex gap-2 pt-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 bg-transparent"
-                        >
-                          <Shield className="w-3 h-3 mr-2" />
-                          Authenticate
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/5"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDisconnectLock(lock.id);
-                          }}
-                        >
-                          <Unplug className="w-3 h-3 mr-2" />
-                          Disconnect
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                  {/* No expanded content - everything moved to modal */}
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
       </div>
+
+      {/* Lock Details Modal */}
+      <Dialog open={showLockModal} onOpenChange={setShowLockModal}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="w-5 h-5" />
+              {selectedLock?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Lock details and management options
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedLock && (
+            <div className="space-y-4">
+              {/* Lock Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs text-muted-foreground">
+                    Lock ID
+                  </Label>
+                  <p className="text-sm font-mono mt-1">{selectedLock.id}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Admin</Label>
+                  <p className="text-sm mt-1">{selectedLock.adminName}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">
+                    Status
+                  </Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="outline" className="text-xs">
+                      <Wifi className="w-3 h-3 mr-1" />
+                      Connected
+                    </Badge>
+                    <Badge
+                      className={`text-xs ${
+                        selectedLock.isOpen
+                          ? "bg-green-500 hover:bg-green-600 text-white border-green-500"
+                          : "bg-red-500 hover:bg-red-600 text-white border-red-500"
+                      }`}
+                    >
+                      {selectedLock.isOpen ? "Open" : "Closed"}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">
+                    Connected Since
+                  </Label>
+                  <p className="text-sm mt-1">{selectedLock.connectedSince}</p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <Button className="flex-1">
+                  <Shield className="w-4 h-4 mr-2" />
+                  Authenticate
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/5"
+                  onClick={() => handleDisconnectLock(selectedLock.id)}
+                >
+                  <Unplug className="w-4 h-4 mr-2" />
+                  Disconnect
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Connect Lock Modal */}
       <Dialog open={showConnectModal} onOpenChange={setShowConnectModal}>
