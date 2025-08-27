@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,21 +23,16 @@ import {
 } from "lucide-react";
 
 export default function AdminDashboard() {
-  const navigate = useNavigate();
   const [selectedLock, setSelectedLock] = useState(null);
   const [showAddLock, setShowAddLock] = useState(false);
 
   // Mock admin user data
   const [adminUser] = useState({
     name: "Biswanath Modak",
-    email: "fuckoff@voiceauth.com",
+    email: "admin@voiceauth.com",
     role: "admin",
-    avatar: "",
+    avatar: "BM",
   });
-
-  const handleLogout = () => {
-    navigate("/auth");
-  };
 
   // Mock data
   const locks = [
@@ -122,7 +116,6 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-background">
       <AdminHeader
         user={adminUser}
-        onLogout={handleLogout}
         title="Admin Dashboard"
         subtitle="Welcome back, Administrator"
       />

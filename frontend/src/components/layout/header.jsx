@@ -5,23 +5,13 @@ import { LogOut, Mic } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Profile from "@/components/Profile";
 
-export function Header({
-  showLogout = false,
-  title,
-  subtitle,
-  user = null,
-  onLogout = null,
-}) {
+export function Header({ showLogout = false, title, subtitle, user = null }) {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    if (onLogout) {
-      onLogout();
-    } else {
-      // Simulate logout
-      navigate("/");
-    }
+    // Simulate logout for non-user profiles
+    navigate("/");
   };
 
   return (
@@ -73,7 +63,7 @@ export function Header({
             <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
           </Button>
-          {user && <Profile user={user} onLogout={handleLogout} />}
+          {user && <Profile user={user} />}
         </div>
       </div>
     </header>

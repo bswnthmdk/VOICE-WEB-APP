@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,7 +23,6 @@ import {
 } from "lucide-react";
 
 export default function UserDashboard() {
-  const navigate = useNavigate();
   const [isRecording, setIsRecording] = useState(false);
 
   // Mock user data
@@ -34,10 +32,6 @@ export default function UserDashboard() {
     role: "user",
     avatar: "JD",
   });
-
-  const handleLogout = () => {
-    navigate("/auth");
-  };
 
   const userProfile = {
     name: user.name,
@@ -112,7 +106,6 @@ export default function UserDashboard() {
     <div className="min-h-screen bg-background">
       <Header
         user={user}
-        onLogout={handleLogout}
         title="User Panel"
         subtitle={`Welcome back, ${userProfile.name}`}
       />

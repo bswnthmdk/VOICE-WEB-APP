@@ -23,15 +23,10 @@ export default function Dashboard() {
     avatar: "JD",
   });
 
-  const handleLogout = () => {
-    navigate("/auth");
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader
         user={user}
-        onLogout={handleLogout}
         title="Dashboard"
         subtitle={`Welcome back, ${user.name}`}
       />
