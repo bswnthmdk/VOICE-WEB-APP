@@ -59,11 +59,10 @@ export default function AuthPage() {
       }
 
       // Base URL from .env (frontend)
-      const API_BASE_URL =
-        import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
       // Decide endpoint
-      const endpoint = isLogin ? "/api/auth/login" : "/api/auth/signup";
+      const endpoint = isLogin ? "/users/login" : "/users/signup";
 
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "POST",
@@ -109,7 +108,7 @@ export default function AuthPage() {
       const API_BASE_URL =
         import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
-      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+      const response = await fetch(`${API_BASE_URL}/users/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
