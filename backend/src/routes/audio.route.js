@@ -5,11 +5,13 @@ import {
   listTrainingAudio,
 } from "../controllers/audio.controller.js";
 
-const router = express.Router();
+const audioRouter = express.Router();
 
 // Grouping routes by path
-router.route("/upload-audio").post(upload.single("audio"), uploadTrainingAudio);
+audioRouter
+  .route("/upload-audio")
+  .post(upload.single("audio"), uploadTrainingAudio);
 
-router.route("/list-audio").get(listTrainingAudio);
+audioRouter.route("/list-audio").get(listTrainingAudio);
 
-export default router;
+export default audioRouter;

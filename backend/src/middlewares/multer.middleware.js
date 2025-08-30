@@ -10,5 +10,4 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + ext); // Unique filename
   },
 });
-console.log("Multer storage configured");
 export const upload = multer({ storage });
