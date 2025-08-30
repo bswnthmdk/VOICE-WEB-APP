@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcrypt";
 
 const userSchema = new mongoose.Schema(
   {
@@ -17,10 +18,22 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    fullName: { type: String, required: true, trim: true, index: true },
+    fullname: { type: String, required: true, trim: true, index: true },
     password: { type: String, required: [true, "Password is required"] },
     refreshToken: { type: String },
   },
   { timestamps: true }
 );
+
+// prefix 'save' hook (like a middleware) runs before saving user document, checks if password is modified, if yes then hashes the password else skips hashing.
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
+
+userSchema.methods.isPasswordCorrect = async function (password) {
+  return await bcrypt.compare(password, this.password);
+};
 export const User = mongoose.model("User", userSchema);
