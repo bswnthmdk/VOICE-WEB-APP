@@ -24,13 +24,43 @@ export default function AuthPage() {
 
   const isLogin = mode === "login";
 
-  const handleSubmit = async (e, isLogin, formData, setMode) => {
+  // Extract form data helper function
+  const extractFormData = (formElement, isLogin) => {
+    const formData = new FormData(formElement);
+
+    if (isLogin) {
+      return {
+        username: formData.get("username"),
+        password: formData.get("password"),
+      };
+    } else {
+      return {
+        firstName: formData.get("firstName"),
+        lastName: formData.get("lastName"),
+        email: formData.get("email"),
+        username: formData.get("username"),
+        password: formData.get("password"),
+        confirmPassword: formData.get("confirmPassword"),
+      };
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const navigate = useNavigate();
 
     try {
+      // Extract form data
+      const formData = extractFormData(e.target, isLogin);
+
+      // Client-side validation for signup
+      if (!isLogin && formData.password !== formData.confirmPassword) {
+        alert("Passwords don't match!");
+        return;
+      }
+
       // Base URL from .env (frontend)
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+      const API_BASE_URL =
+        import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
       // Decide endpoint
       const endpoint = isLogin ? "/api/auth/login" : "/api/auth/signup";
@@ -52,19 +82,50 @@ export default function AuthPage() {
         localStorage.setItem("isAuthenticated", "true");
         localStorage.setItem("token", data.token);
 
+        // Store user info if provided
+        if (data.user) {
+          localStorage.setItem("user", JSON.stringify(data.user));
+        }
+
         navigate("/dashboard");
       } else {
         alert("Account created successfully!");
         setMode("login"); // switch to login form
       }
     } catch (err) {
-      alert(err.message);
+      console.error("Auth error:", err);
+      alert(err.message || "An error occurred. Please try again.");
     }
   };
 
-  const handleForgotPassword = (e) => {
+  const handleForgotPassword = async (e) => {
     e.preventDefault();
-    alert("Password reset email sent!");
+
+    try {
+      const formData = new FormData(e.target);
+      const email = formData.get("email");
+
+      // You would typically send this to your backend
+      const API_BASE_URL =
+        import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+
+      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (response.ok) {
+        alert("Password reset email sent!");
+      } else {
+        const data = await response.json();
+        alert(data.message || "Failed to send reset email");
+      }
+    } catch (err) {
+      console.error("Forgot password error:", err);
+      alert("Failed to send reset email. Please try again.");
+    }
+
     setShowForgotPassword(false);
   };
 

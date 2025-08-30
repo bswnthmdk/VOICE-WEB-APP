@@ -8,11 +8,11 @@ export function SignupForm({ onSubmit }) {
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="firstName">First Name</Label>
-          <Input id="firstName" placeholder="John" required />
+          <Input id="firstName" name="firstName" placeholder="John" required />
         </div>
         <div className="space-y-2">
           <Label htmlFor="lastName">Last Name</Label>
-          <Input id="lastName" placeholder="Doe" required />
+          <Input id="lastName" name="lastName" placeholder="Doe" required />
         </div>
       </div>
 
@@ -20,6 +20,7 @@ export function SignupForm({ onSubmit }) {
         <Label htmlFor="email">Email</Label>
         <Input
           id="email"
+          name="email"
           type="email"
           placeholder="john@example.com"
           required
@@ -28,13 +29,19 @@ export function SignupForm({ onSubmit }) {
 
       <div className="space-y-2">
         <Label htmlFor="username">Username</Label>
-        <Input id="username" placeholder="Enter username" required />
+        <Input
+          id="username"
+          name="username"
+          placeholder="Enter username"
+          required
+        />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
         <Input
           id="password"
+          name="password"
           type="password"
           placeholder="Enter password"
           required
@@ -45,6 +52,7 @@ export function SignupForm({ onSubmit }) {
         <Label htmlFor="confirmPassword">Confirm Password</Label>
         <Input
           id="confirmPassword"
+          name="confirmPassword"
           type="password"
           placeholder="Confirm password"
           required

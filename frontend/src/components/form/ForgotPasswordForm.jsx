@@ -6,9 +6,10 @@ export function ForgotPasswordForm({ onSubmit, onBack }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">Email Address</Label>
         <Input
           id="email"
+          name="email"
           type="email"
           placeholder="Enter your email"
           required
@@ -19,7 +20,12 @@ export function ForgotPasswordForm({ onSubmit, onBack }) {
         Send Reset Link
       </Button>
 
-      <Button type="button" variant="ghost" className="w-full" onClick={onBack}>
+      <Button
+        type="button"
+        variant="ghost"
+        className="w-full text-sm"
+        onClick={onBack}
+      >
         Back to Login
       </Button>
     </form>

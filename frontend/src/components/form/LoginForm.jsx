@@ -7,13 +7,19 @@ export function LoginForm({ onSubmit, onForgotPassword }) {
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="username">Username</Label>
-        <Input id="username" placeholder="Enter username" required />
+        <Input
+          id="username"
+          name="username"
+          placeholder="Enter username"
+          required
+        />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
         <Input
           id="password"
+          name="password"
           type="password"
           placeholder="Enter password"
           required
