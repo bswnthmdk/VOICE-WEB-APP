@@ -7,7 +7,7 @@ export const connectDB = async (app) => {
     });
     app.listen(process.env.PORT, () => {
       console.log(`Database connected successfully`);
-      console.log(`Server is running on http://localhost:${process.env.PORT}`);
+      console.log(`Server is running on ${process.env.BASE_URL}`);
     });
   } catch (error) {
     console.error("Failed to start server:", error.message);

@@ -1,5 +1,6 @@
 import express from "express";
 import { upload } from "../middlewares/multer.middleware.js";
+import { verifyAccessToken } from "../middlewares/auth.middleware.js";
 import {
   uploadTrainingAudio,
   listTrainingAudio,
@@ -7,11 +8,11 @@ import {
 
 const audioRouter = express.Router();
 
-// Grouping routes by path
+// Protected audio routes - require authentication
 audioRouter
   .route("/upload-audio")
-  .post(upload.single("audio"), uploadTrainingAudio);
+  .post(verifyAccessToken, upload.single("audio"), uploadTrainingAudio);
 
-audioRouter.route("/list-audio").get(listTrainingAudio);
+audioRouter.route("/list-audio").get(verifyAccessToken, listTrainingAudio);
 
 export default audioRouter;

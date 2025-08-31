@@ -1,10 +1,22 @@
 import express from "express";
-import { signupUser, loginUser } from "../controllers/user.controller.js";
+import {
+  signupUser,
+  loginUser,
+  logoutUser,
+  refreshAccessToken,
+  getCurrentUser,
+} from "../controllers/user.controller.js";
+import { verifyAccessToken } from "../middlewares/auth.middleware.js";
 
 const userRouter = express.Router();
 
-// Grouping routes by path
+// Public routes
 userRouter.route("/signup").post(signupUser);
 userRouter.route("/login").post(loginUser);
+userRouter.route("/refresh-token").post(refreshAccessToken);
+
+// Protected routes
+userRouter.route("/logout").post(verifyAccessToken, logoutUser);
+userRouter.route("/current-user").get(verifyAccessToken, getCurrentUser);
 
 export default userRouter;
