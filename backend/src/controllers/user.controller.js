@@ -291,3 +291,93 @@ export const getCurrentUser = async (req, res) => {
     });
   }
 };
+
+/*
+Update User Profile
+1. Get user data from request body (fullname, username, currentPassword, newPassword)
+2. Validate required fields and password confirmation if changing password
+3. Check if current password is correct (if changing password)
+4. Check if new username is already taken (if changing username)
+5. Update user fields
+6. Return updated user data without sensitive fields
+*/
+
+export const updateUser = async (req, res) => {
+  try {
+    const { newFullname, newUsername, currentPassword, newPassword } = req.body;
+    const userId = req.user._id;
+
+    if (!newFullname && !newUsername && !newPassword) {
+      throw new ApiError(
+        400,
+        false,
+        "At least one field is required for update"
+      );
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new ApiError(404, false, "User not found");
+    }
+
+    if (newPassword) {
+      if (!currentPassword) {
+        throw new ApiError(
+          400,
+          false,
+          "Current password is required to change password"
+        );
+      }
+
+      const isCurrentPasswordCorrect = await user.isPasswordCorrect(
+        currentPassword
+      );
+      if (!isCurrentPasswordCorrect) {
+        throw new ApiError(400, false, "Current password is incorrect");
+      }
+    }
+
+    if (newUsername && newUsername !== user.username) {
+      const usernameExists = await User.findOne({
+        username: newUsername.toLowerCase(),
+        _id: { $ne: userId },
+      });
+
+      if (usernameExists) {
+        throw new ApiError(
+          409,
+          false,
+          "Username is already taken by another user"
+        );
+      }
+    }
+
+    if (newFullname) user.fullname = newFullname.trim();
+    if (newUsername) user.username = newUsername.toLowerCase();
+    if (newPassword) user.password = newPassword; // will be hashed by pre-save hook
+
+    const updatedUser = await user.save();
+
+    return res.status(200).json(
+      new ApiResponse(200, true, "User profile updated successfully", {
+        _id: updatedUser._id,
+        fullname: updatedUser.fullname,
+        username: updatedUser.username,
+        email: updatedUser.email,
+      })
+    );
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        success: error.success,
+        message: error.message,
+        errors: error.errors,
+      });
+    }
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      errors: error.message,
+    });
+  }
+};

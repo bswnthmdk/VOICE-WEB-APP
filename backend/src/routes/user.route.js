@@ -5,6 +5,7 @@ import {
   logoutUser,
   refreshAccessToken,
   getCurrentUser,
+  updateUser,
 } from "../controllers/user.controller.js";
 import { verifyAccessToken } from "../middlewares/auth.middleware.js";
 
@@ -18,5 +19,6 @@ userRouter.route("/refresh-token").post(refreshAccessToken);
 // Protected routes
 userRouter.route("/logout").post(verifyAccessToken, logoutUser);
 userRouter.route("/current-user").get(verifyAccessToken, getCurrentUser);
+userRouter.route("/update-profile").put(verifyAccessToken, updateUser);
 
 export default userRouter;
