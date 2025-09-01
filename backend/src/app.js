@@ -6,11 +6,6 @@ import userRoutes from "./routes/user.route.js";
 
 const app = express();
 
-app.use((req, res, next) => {
-  console.log("Request Origin 1:", req.headers.origin);
-  next();
-});
-
 // app.use(
 //   cors({
 //     origin: process.env.CORS_ORIGIN,
