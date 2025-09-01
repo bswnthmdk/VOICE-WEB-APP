@@ -67,7 +67,7 @@ app.use((err, req, res, next) => {
 });
 
 // Handle 404
-app.use("*", (req, res) => {
+app.use((req, res) => {
   console.log(`404 Not Found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({
     success: false,
