@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 
 import {
@@ -22,6 +23,8 @@ export default function Dashboard({ user, logout, updateUser }) {
     email: "loading@example.com",
   };
 
+  console.log("🎛️ Dashboard rendered with user:", currentUser);
+
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader
@@ -30,8 +33,6 @@ export default function Dashboard({ user, logout, updateUser }) {
         subtitle={`Welcome back, ${
           currentUser.fullname || currentUser.username
         }`}
-        onLogout={logout}
-        onUserUpdate={updateUser}
       />
 
       <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">

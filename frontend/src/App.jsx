@@ -234,7 +234,7 @@ const AuthProvider = ({ children }) => {
     );
   }
 
-  return <>{React.cloneElement(children, { user, updateUser, logout })}</>;
+  return <>{children({ user, updateUser, logout })}</>;
 };
 
 // Simple auth check
@@ -308,7 +308,13 @@ function App() {
         element={
           <ProtectedRoute>
             <AuthProvider>
-              <Dashboard />
+              {({ user, updateUser, logout }) => (
+                <Dashboard
+                  user={user}
+                  updateUser={updateUser}
+                  logout={logout}
+                />
+              )}
             </AuthProvider>
           </ProtectedRoute>
         }
@@ -318,7 +324,13 @@ function App() {
         element={
           <ProtectedRoute>
             <AuthProvider>
-              <AdminDashboard />
+              {({ user, updateUser, logout }) => (
+                <AdminDashboard
+                  user={user}
+                  updateUser={updateUser}
+                  logout={logout}
+                />
+              )}
             </AuthProvider>
           </ProtectedRoute>
         }
@@ -328,7 +340,13 @@ function App() {
         element={
           <ProtectedRoute>
             <AuthProvider>
-              <UserDashboard />
+              {({ user, updateUser, logout }) => (
+                <UserDashboard
+                  user={user}
+                  updateUser={updateUser}
+                  logout={logout}
+                />
+              )}
             </AuthProvider>
           </ProtectedRoute>
         }
