@@ -3,7 +3,13 @@ import { Moon, Sun, Mic } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 import Profile from "@/components/Profile";
 
-export function DashboardHeader({ user, title = "Dashboard", subtitle }) {
+export function DashboardHeader({
+  user,
+  title = "Dashboard",
+  subtitle,
+  onLogout,
+  onUserUpdate,
+}) {
   const { theme, setTheme } = useTheme();
 
   return (
@@ -53,7 +59,11 @@ export function DashboardHeader({ user, title = "Dashboard", subtitle }) {
               <Moon className="absolute h-[1rem] w-[1rem] sm:h-[1.2rem] sm:w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
               <span className="sr-only">Toggle theme</span>
             </Button>
-            <Profile user={user} />
+            <Profile
+              user={user}
+              onLogout={onLogout}
+              onUserUpdate={onUserUpdate}
+            />
           </div>
         </div>
       </div>

@@ -33,6 +33,8 @@ export default function Dashboard({ user, logout, updateUser }) {
         subtitle={`Welcome back, ${
           currentUser.fullname || currentUser.username
         }`}
+        onLogout={logout}
+        onUserUpdate={updateUser}
       />
 
       <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
