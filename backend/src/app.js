@@ -6,6 +6,11 @@ import userRoutes from "./routes/user.route.js";
 
 const app = express();
 
+app.use((req, res, next) => {
+  console.log("Request Origin 1:", req.headers.origin);
+  next();
+});
+
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN,
@@ -14,6 +19,11 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+app.use((req, res, next) => {
+  console.log("Request Origin:", req.headers.origin);
+  next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));

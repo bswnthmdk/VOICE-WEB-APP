@@ -8,6 +8,7 @@ export const connectDB = async (app) => {
     app.listen(process.env.PORT, () => {
       console.log(`Database connected successfully`);
       console.log(`Server is running on ${process.env.BASE_URL}`);
+      console.log(`Cors origin ${process.env.CORS_ORIGIN}`); // Debug log for CORS origin
     });
   } catch (error) {
     console.error("Failed to start server:", error.message);
