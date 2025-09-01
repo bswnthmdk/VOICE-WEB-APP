@@ -11,14 +11,20 @@ import {
 } from "@/components/ui/card";
 import { Eye, EyeOff, Trash2 } from "lucide-react";
 
-export default function ProfileSettings({ user, onClose }) {
+export default function ProfileSettings({
+  user,
+  onClose,
+  onUserUpdate,
+  onLogout,
+}) {
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // Form states
+  // Form states - initialize with actual user data
   const [profileData, setProfileData] = useState({
-    fullName: user?.name || "",
-    username: user?.username || "",
+    newFullname: user?.fullname || "",
+    newUsername: user?.username || "",
     currentPassword: "",
     newPassword: "",
     confirmNewPassword: "",
@@ -31,46 +37,150 @@ export default function ProfileSettings({ user, onClose }) {
     }));
   };
 
-  const handleSaveProfile = () => {
-    // Validate passwords match if changing password
-    if (
-      profileData.newPassword &&
-      profileData.newPassword !== profileData.confirmNewPassword
-    ) {
-      alert("New passwords don't match!");
-      return;
+  const handleSaveProfile = async () => {
+    setLoading(true);
+
+    try {
+      // Validate passwords match if changing password
+      if (
+        profileData.newPassword &&
+        profileData.newPassword !== profileData.confirmNewPassword
+      ) {
+        alert("New passwords don't match!");
+        setLoading(false);
+        return;
+      }
+
+      // Check if any changes were made
+      const hasChanges =
+        profileData.newFullname !== user?.fullname ||
+        profileData.newUsername !== user?.username ||
+        profileData.newPassword;
+
+      if (!hasChanges) {
+        alert("No changes to save!");
+        setLoading(false);
+        return;
+      }
+
+      const API_BASE_URL =
+        import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+      const token = localStorage.getItem("accessToken");
+
+      // Prepare update data
+      const updateData = {};
+
+      if (profileData.newFullname !== user?.fullname) {
+        updateData.newFullname = profileData.newFullname;
+      }
+
+      if (profileData.newUsername !== user?.username) {
+        updateData.newUsername = profileData.newUsername;
+      }
+
+      if (profileData.newPassword) {
+        updateData.currentPassword = profileData.currentPassword;
+        updateData.newPassword = profileData.newPassword;
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/voice-web-app/api/users/update-profile`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(updateData),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to update profile");
+      }
+
+      // Update user data in parent component
+      if (onUserUpdate && data.data) {
+        onUserUpdate(data.data);
+      }
+
+      alert("Profile updated successfully!");
+
+      // Reset password fields
+      setProfileData((prev) => ({
+        ...prev,
+        currentPassword: "",
+        newPassword: "",
+        confirmNewPassword: "",
+      }));
+    } catch (error) {
+      console.error("Update profile error:", error);
+      alert(error.message || "Failed to update profile. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    // Save profile logic here
-    console.log("Saving profile:", profileData);
-    alert("Profile saved successfully!");
-
-    // Reset password fields
-    setProfileData((prev) => ({
-      ...prev,
-      currentPassword: "",
-      newPassword: "",
-      confirmNewPassword: "",
-    }));
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
+    const currentPassword = prompt(
+      "Enter your current password to confirm account deletion:"
+    );
+
+    if (!currentPassword) {
+      return; // User cancelled
+    }
+
     if (
       window.confirm(
-        "Are you sure you want to delete your account? This action cannot be undone."
+        "Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data."
       )
     ) {
-      // Delete account logic here
-      console.log("Deleting account");
-      alert("Account deleted successfully!");
+      setLoading(true);
 
-      // Clear authentication and close modal
-      if (typeof window !== "undefined" && window.localStorage) {
-        window.localStorage.removeItem("isAuthenticated");
+      try {
+        const API_BASE_URL =
+          import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+        const token = localStorage.getItem("accessToken");
+
+        const response = await fetch(
+          `${API_BASE_URL}/voice-web-app/api/users/delete-account`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({ currentPassword }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to delete account");
+        }
+
+        alert("Account deleted successfully!");
+
+        // Clear authentication and close modal
+        localStorage.removeItem("isAuthenticated");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("user");
+
+        onClose();
+
+        // Redirect to home page
+        window.location.href = "/";
+      } catch (error) {
+        console.error("Delete account error:", error);
+        alert(error.message || "Failed to delete account. Please try again.");
+      } finally {
+        setLoading(false);
       }
-      onClose();
-
-      // In real implementation: window.location.href = '/';
     }
   };
 
@@ -89,9 +199,10 @@ export default function ProfileSettings({ user, onClose }) {
             <Label htmlFor="fullName">Full Name</Label>
             <Input
               id="fullName"
-              value={profileData.fullName}
-              onChange={(e) => handleInputChange("fullName", e.target.value)}
+              value={profileData.newFullname}
+              onChange={(e) => handleInputChange("newFullname", e.target.value)}
               placeholder="Enter your full name"
+              disabled={loading}
             />
           </div>
 
@@ -99,9 +210,10 @@ export default function ProfileSettings({ user, onClose }) {
             <Label htmlFor="username">Username</Label>
             <Input
               id="username"
-              value={profileData.username}
-              onChange={(e) => handleInputChange("username", e.target.value)}
+              value={profileData.newUsername}
+              onChange={(e) => handleInputChange("newUsername", e.target.value)}
               placeholder="Enter your username"
+              disabled={loading}
             />
             <p className="text-xs text-muted-foreground">
               Choose a unique username for your account
@@ -142,6 +254,7 @@ export default function ProfileSettings({ user, onClose }) {
                   handleInputChange("currentPassword", e.target.value)
                 }
                 placeholder="Enter current password"
+                disabled={loading}
               />
               <Button
                 type="button"
@@ -149,6 +262,7 @@ export default function ProfileSettings({ user, onClose }) {
                 size="sm"
                 className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                 onClick={() => setShowPassword(!showPassword)}
+                disabled={loading}
               >
                 {showPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -167,6 +281,7 @@ export default function ProfileSettings({ user, onClose }) {
               value={profileData.newPassword}
               onChange={(e) => handleInputChange("newPassword", e.target.value)}
               placeholder="Enter new password"
+              disabled={loading}
             />
             <p className="text-xs text-muted-foreground">
               Password should be at least 6 characters long
@@ -184,6 +299,7 @@ export default function ProfileSettings({ user, onClose }) {
                   handleInputChange("confirmNewPassword", e.target.value)
                 }
                 placeholder="Confirm new password"
+                disabled={loading}
               />
               <Button
                 type="button"
@@ -191,6 +307,7 @@ export default function ProfileSettings({ user, onClose }) {
                 size="sm"
                 className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                 onClick={() => setConfirmPassword(!confirmPassword)}
+                disabled={loading}
               >
                 {confirmPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -205,10 +322,19 @@ export default function ProfileSettings({ user, onClose }) {
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <Button onClick={handleSaveProfile} className="flex-1">
-          Save Changes
+        <Button
+          onClick={handleSaveProfile}
+          className="flex-1"
+          disabled={loading}
+        >
+          {loading ? "Saving..." : "Save Changes"}
         </Button>
-        <Button variant="outline" onClick={onClose} className="flex-1">
+        <Button
+          variant="outline"
+          onClick={onClose}
+          className="flex-1"
+          disabled={loading}
+        >
           Cancel
         </Button>
       </div>
@@ -235,9 +361,10 @@ export default function ProfileSettings({ user, onClose }) {
               variant="destructive"
               onClick={handleDeleteAccount}
               className="shrink-0"
+              disabled={loading}
             >
               <Trash2 className="w-4 h-4 mr-2" />
-              Delete Account
+              {loading ? "Deleting..." : "Delete Account"}
             </Button>
           </div>
         </CardContent>

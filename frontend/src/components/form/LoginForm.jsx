@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function LoginForm({ onSubmit, onForgotPassword }) {
+export function LoginForm({ onSubmit, onForgotPassword, loading }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
@@ -12,6 +12,7 @@ export function LoginForm({ onSubmit, onForgotPassword }) {
           name="username"
           placeholder="Enter username"
           required
+          disabled={loading}
         />
       </div>
 
@@ -23,11 +24,12 @@ export function LoginForm({ onSubmit, onForgotPassword }) {
           type="password"
           placeholder="Enter password"
           required
+          disabled={loading}
         />
       </div>
 
-      <Button type="submit" className="w-full">
-        Sign In
+      <Button type="submit" className="w-full" disabled={loading}>
+        {loading ? "Signing In..." : "Sign In"}
       </Button>
 
       <Button
@@ -35,6 +37,7 @@ export function LoginForm({ onSubmit, onForgotPassword }) {
         variant="ghost"
         className="w-full text-sm"
         onClick={onForgotPassword}
+        disabled={loading}
       >
         Forgot Password?
       </Button>

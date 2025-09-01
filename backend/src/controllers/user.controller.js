@@ -23,6 +23,95 @@ const generateAccessAndRefreshToken = async (userId) => {
   }
 };
 
+export const refreshAccessToken = async (req, res) => {
+  try {
+    const incomingRefreshToken =
+      req.cookies.refreshToken || req.body.refreshToken;
+
+    if (!incomingRefreshToken) {
+      throw new ApiError(401, false, "Unauthorized request");
+    }
+
+    const decodedToken = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+
+    const user = await User.findById(decodedToken?._id);
+
+    if (!user) {
+      throw new ApiError(401, false, "Invalid refresh token");
+    }
+
+    if (incomingRefreshToken !== user?.refreshToken) {
+      throw new ApiError(401, false, "Refresh token is expired or used");
+    }
+
+    const { accessToken, refreshToken: newRefreshToken } =
+      await generateAccessAndRefreshToken(user._id);
+
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 10 * 24 * 60 * 60 * 1000, // 10 days
+    };
+
+    return res
+      .status(200)
+      .cookie("refreshToken", newRefreshToken, cookieOptions)
+      .json(
+        new ApiResponse(200, true, "Access token refreshed successfully", {
+          accessToken,
+        })
+      );
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        success: false,
+        message: "Refresh token expired",
+        code: "REFRESH_TOKEN_EXPIRED",
+      });
+    }
+
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid refresh token",
+        code: "INVALID_REFRESH_TOKEN",
+      });
+    }
+
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        success: error.success,
+        message: error.message,
+        errors: error.errors,
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      errors: error,
+    });
+  }
+};
+
+export const getCurrentUser = async (req, res) => {
+  try {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, true, "User fetched successfully", req.user));
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      errors: error,
+    });
+  }
+};
+
 /*
 1. Get user data from request body
 2. Validate user data
@@ -194,95 +283,6 @@ export const logoutUser = async (req, res) => {
       .status(200)
       .clearCookie("refreshToken", cookieOptions)
       .json(new ApiResponse(200, true, "User logged out successfully", {}));
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-      errors: error,
-    });
-  }
-};
-
-export const refreshAccessToken = async (req, res) => {
-  try {
-    const incomingRefreshToken =
-      req.cookies.refreshToken || req.body.refreshToken;
-
-    if (!incomingRefreshToken) {
-      throw new ApiError(401, false, "Unauthorized request");
-    }
-
-    const decodedToken = jwt.verify(
-      incomingRefreshToken,
-      process.env.REFRESH_TOKEN_SECRET
-    );
-
-    const user = await User.findById(decodedToken?._id);
-
-    if (!user) {
-      throw new ApiError(401, false, "Invalid refresh token");
-    }
-
-    if (incomingRefreshToken !== user?.refreshToken) {
-      throw new ApiError(401, false, "Refresh token is expired or used");
-    }
-
-    const { accessToken, refreshToken: newRefreshToken } =
-      await generateAccessAndRefreshToken(user._id);
-
-    const cookieOptions = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 10 * 24 * 60 * 60 * 1000, // 10 days
-    };
-
-    return res
-      .status(200)
-      .cookie("refreshToken", newRefreshToken, cookieOptions)
-      .json(
-        new ApiResponse(200, true, "Access token refreshed successfully", {
-          accessToken,
-        })
-      );
-  } catch (error) {
-    if (error.name === "TokenExpiredError") {
-      return res.status(401).json({
-        success: false,
-        message: "Refresh token expired",
-        code: "REFRESH_TOKEN_EXPIRED",
-      });
-    }
-
-    if (error.name === "JsonWebTokenError") {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid refresh token",
-        code: "INVALID_REFRESH_TOKEN",
-      });
-    }
-
-    if (error instanceof ApiError) {
-      return res.status(error.statusCode).json({
-        success: error.success,
-        message: error.message,
-        errors: error.errors,
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-      errors: error,
-    });
-  }
-};
-
-export const getCurrentUser = async (req, res) => {
-  try {
-    return res
-      .status(200)
-      .json(new ApiResponse(200, true, "User fetched successfully", req.user));
   } catch (error) {
     return res.status(500).json({
       success: false,

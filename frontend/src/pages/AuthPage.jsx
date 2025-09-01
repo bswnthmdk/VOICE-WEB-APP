@@ -19,6 +19,7 @@ import { ForgotPasswordForm } from "@/components/form/ForgotPasswordForm";
 export default function AuthPage() {
   const [mode, setMode] = useState("login");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
@@ -34,9 +35,10 @@ export default function AuthPage() {
         password: formData.get("password"),
       };
     } else {
+      const firstName = formData.get("firstName");
+      const lastName = formData.get("lastName");
       return {
-        firstName: formData.get("firstName"),
-        lastName: formData.get("lastName"),
+        fullname: `${firstName} ${lastName}`.trim(),
         email: formData.get("email"),
         username: formData.get("username"),
         password: formData.get("password"),
@@ -47,6 +49,7 @@ export default function AuthPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
       // Extract form data
@@ -55,18 +58,25 @@ export default function AuthPage() {
       // Client-side validation for signup
       if (!isLogin && formData.password !== formData.confirmPassword) {
         alert("Passwords don't match!");
+        setLoading(false);
         return;
       }
 
       // Base URL from .env (frontend)
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+      const API_BASE_URL =
+        import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
       // Decide endpoint
-      const endpoint = isLogin ? "/users/login" : "/users/signup";
+      const endpoint = isLogin
+        ? "/voice-web-app/api/users/login"
+        : "/voice-web-app/api/users/signup";
 
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // Important for cookies
         body: JSON.stringify(formData),
       });
 
@@ -77,42 +87,54 @@ export default function AuthPage() {
       }
 
       if (isLogin) {
-        // Save token/user info
+        // Save authentication state and user data
         localStorage.setItem("isAuthenticated", "true");
-        localStorage.setItem("token", data.token);
 
-        // Store user info if provided
-        if (data.user) {
-          localStorage.setItem("user", JSON.stringify(data.user));
+        // Store access token if provided
+        if (data.data?.accessToken) {
+          localStorage.setItem("accessToken", data.data.accessToken);
         }
 
+        // Store user info
+        if (data.data?.user) {
+          localStorage.setItem("user", JSON.stringify(data.data.user));
+        }
+
+        // Navigate to dashboard
         navigate("/dashboard");
       } else {
-        alert("Account created successfully!");
+        alert("Account created successfully! Please log in.");
         setMode("login"); // switch to login form
+        // Reset form
+        e.target.reset();
       }
     } catch (err) {
       console.error("Auth error:", err);
       alert(err.message || "An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
       const formData = new FormData(e.target);
       const email = formData.get("email");
 
-      // You would typically send this to your backend
       const API_BASE_URL =
-        import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+        import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
-      const response = await fetch(`${API_BASE_URL}/users/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/voice-web-app/api/users/forgot-password`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        }
+      );
 
       if (response.ok) {
         alert("Password reset email sent!");
@@ -123,6 +145,8 @@ export default function AuthPage() {
     } catch (err) {
       console.error("Forgot password error:", err);
       alert("Failed to send reset email. Please try again.");
+    } finally {
+      setLoading(false);
     }
 
     setShowForgotPassword(false);
@@ -229,6 +253,7 @@ export default function AuthPage() {
               size="sm"
               onClick={() => setMode("login")}
               className="text-xs"
+              disabled={loading}
             >
               Login
             </Button>
@@ -237,6 +262,7 @@ export default function AuthPage() {
               size="sm"
               onClick={() => setMode("signup")}
               className="text-xs"
+              disabled={loading}
             >
               Signup
             </Button>
@@ -247,9 +273,10 @@ export default function AuthPage() {
             <LoginForm
               onSubmit={handleSubmit}
               onForgotPassword={() => setShowForgotPassword(true)}
+              loading={loading}
             />
           ) : (
-            <SignupForm onSubmit={handleSubmit} />
+            <SignupForm onSubmit={handleSubmit} loading={loading} />
           )}
         </CardContent>
       </Card>

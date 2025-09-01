@@ -19,6 +19,7 @@ import { useTheme } from "@/components/theme-provider";
 
 export default function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
@@ -28,6 +29,11 @@ export default function LandingPage() {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    // Check authentication status
+    setIsAuthenticated(localStorage.getItem("isAuthenticated") === "true");
   }, []);
 
   const scrollToSection = (sectionId) => {
@@ -90,15 +96,27 @@ export default function LandingPage() {
           </nav>
 
           <div className="flex items-center gap-4">
-            <Link href="/auth">
-              <Button
-                size={isScrolled ? "sm" : "default"}
-                className="transition-all duration-300"
-              >
-                Get Started
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
+            {isAuthenticated ? (
+              <Link href="/dashboard">
+                <Button
+                  size={isScrolled ? "sm" : "default"}
+                  className="transition-all duration-300"
+                >
+                  Go to Dashboard
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            ) : (
+              <Link href="/auth">
+                <Button
+                  size={isScrolled ? "sm" : "default"}
+                  className="transition-all duration-300"
+                >
+                  Get Started
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            )}
             <Button
               variant="outline"
               size="icon"
@@ -124,12 +142,21 @@ export default function LandingPage() {
             Secure, seamless, and sophisticated voice-based authentication
             system that transforms how users access your applications.
           </p>
-          <Link href="/auth">
-            <Button size="lg" className="text-lg px-8 py-6 rounded-xl">
-              Get Started
-              <ChevronRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
+          {isAuthenticated ? (
+            <Link href="/dashboard">
+              <Button size="lg" className="text-lg px-8 py-6 rounded-xl">
+                Go to Dashboard
+                <ChevronRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/auth">
+              <Button size="lg" className="text-lg px-8 py-6 rounded-xl">
+                Get Started
+                <ChevronRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+          )}
         </div>
       </section>
 

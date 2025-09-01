@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
@@ -13,29 +12,33 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { LayoutDashboard, ShieldAlert, User } from "lucide-react";
 
-export default function Dashboard() {
+export default function Dashboard({ user, logout, updateUser }) {
   const navigate = useNavigate();
 
-  const [user] = useState({
-    name: "John Doe",
-    email: "john.doe@company.com",
-    role: "user",
-    avatar: "JD",
-  });
+  // Fallback user data if not provided
+  const currentUser = user || {
+    fullname: "Loading...",
+    username: "loading",
+    email: "loading@example.com",
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader
-        user={user}
+        user={currentUser}
         title="Dashboard"
-        subtitle={`Welcome back, ${user.name}`}
+        subtitle={`Welcome back, ${
+          currentUser.fullname || currentUser.username
+        }`}
+        onLogout={logout}
+        onUserUpdate={updateUser}
       />
 
       <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Mobile Welcome Message - Show only on small screens */}
         <div className="sm:hidden mb-6">
           <p className="text-sm text-muted-foreground">
-            Welcome back, {user.name}
+            Welcome back, {currentUser.fullname || currentUser.username}
           </p>
         </div>
 
@@ -108,6 +111,43 @@ export default function Dashboard() {
                 <Button variant="ghost" className="ml-2 text-sm">
                   Open →
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* User Info Card */}
+        <div className="mt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="w-5 h-5" />
+                Account Information
+              </CardTitle>
+              <CardDescription>Your current account details</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">
+                    Full Name
+                  </Label>
+                  <p className="text-sm font-medium">
+                    {currentUser.fullname || "Not set"}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">
+                    Username
+                  </Label>
+                  <p className="text-sm font-medium">@{currentUser.username}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">
+                    Email
+                  </Label>
+                  <p className="text-sm font-medium">{currentUser.email}</p>
+                </div>
               </div>
             </CardContent>
           </Card>

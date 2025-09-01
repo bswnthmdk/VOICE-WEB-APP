@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,21 +19,65 @@ import { Settings, LogOut } from "lucide-react";
 import ProfileSettings from "./ProfileSettings";
 import VoiceTraining from "./VoiceTraining";
 
-export default function Profile({ user }) {
+export default function Profile({ user, onLogout, onUserUpdate }) {
   const [showSettings, setShowSettings] = useState(false);
-  const navigate = useNavigate();
 
-  const handleLogout = () => {
-    // Clear authentication if needed
-    if (typeof window !== "undefined" && window.localStorage) {
-      window.localStorage.removeItem("isAuthenticated");
+  const handleLogout = async () => {
+    if (window.confirm("Are you sure you want to logout?")) {
+      try {
+        // Call the logout function passed from parent
+        if (onLogout) {
+          await onLogout();
+        } else {
+          // Fallback logout logic
+          const API_BASE_URL =
+            import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+          const token = localStorage.getItem("accessToken");
+
+          if (token) {
+            await fetch(`${API_BASE_URL}/voice-web-app/api/users/logout`, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+            });
+          }
+
+          // Clear authentication data
+          localStorage.removeItem("isAuthenticated");
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("user");
+
+          // Redirect to home page
+          window.location.href = "/";
+        }
+      } catch (error) {
+        console.error("Logout error:", error);
+        // Force logout even if API call fails
+        localStorage.removeItem("isAuthenticated");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("user");
+        window.location.href = "/";
+      }
     }
-    // For demonstration purposes
-    alert(
-      "Logout successful! In a real app, this would navigate to the root page."
-    );
-    navigate("/");
-    // In real implementation, you would use: window.location.href = '/';
+  };
+
+  // Generate user initials for avatar
+  const getUserInitials = () => {
+    if (user?.fullname) {
+      return user.fullname
+        .split(" ")
+        .map((word) => word.charAt(0))
+        .slice(0, 2)
+        .join("")
+        .toUpperCase();
+    }
+    if (user?.username) {
+      return user.username.charAt(0).toUpperCase();
+    }
+    return "U";
   };
 
   return (
@@ -47,13 +90,7 @@ export default function Profile({ user }) {
           >
             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center transition-colors">
               <span className="text-sm font-medium text-foreground">
-                {user?.avatar || user?.name
-                  ? user.name
-                      .split(" ")
-                      .map((word) => word.charAt(0))
-                      .slice(0, 2)
-                      .join("")
-                  : "U"}
+                {getUserInitials()}
               </span>
             </div>
           </Button>
@@ -62,10 +99,13 @@ export default function Profile({ user }) {
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">
-                {user?.name || "User"}
+                {user?.fullname || user?.username || "User"}
               </p>
               <p className="text-xs leading-none text-muted-foreground">
                 {user?.email || "user@example.com"}
+              </p>
+              <p className="text-xs leading-none text-muted-foreground">
+                @{user?.username || "username"}
               </p>
             </div>
           </DropdownMenuLabel>
@@ -106,6 +146,8 @@ export default function Profile({ user }) {
             <ProfileSettings
               user={user}
               onClose={() => setShowSettings(false)}
+              onUserUpdate={onUserUpdate}
+              onLogout={onLogout}
             />
           </div>
         </DialogContent>
