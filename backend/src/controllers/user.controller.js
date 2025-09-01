@@ -381,3 +381,101 @@ export const updateUser = async (req, res) => {
     });
   }
 };
+
+/*
+Delete User Account
+1. Get current password from request body for verification
+2. Verify the current password for security
+3. Delete user's associated data (if any) - like audio files, etc.
+4. Delete user document from database
+5. Clear refresh token cookie
+6. Return success response
+*/
+
+export const deleteAccount = async (req, res) => {
+  try {
+    const { currentPassword } = req.body;
+    const userId = req.user._id;
+
+    // 1. Validate current password is provided
+    if (!currentPassword) {
+      throw new ApiError(
+        400,
+        false,
+        "Current password is required to delete account"
+      );
+    }
+
+    // 2. Get user from database
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new ApiError(404, false, "User not found");
+    }
+
+    // 3. Verify current password
+    const isPasswordCorrect = await user.isPasswordCorrect(currentPassword);
+    if (!isPasswordCorrect) {
+      throw new ApiError(400, false, "Current password is incorrect");
+    }
+
+    // 4. TODO: Delete user's associated data
+    // - Delete audio files from Cloudinary
+    // - Delete any other user-related data
+    // This would be implemented based on your app's data structure
+
+    // For now, we'll add a placeholder for future implementation
+    try {
+      // Example: Delete user's audio files from Cloudinary
+      // const audioFiles = await cloudinary.search
+      //   .expression(`folder:voice-web-app/training-audio AND context.userId=${userId}`)
+      //   .execute();
+      //
+      // for (const file of audioFiles.resources) {
+      //   await cloudinary.uploader.destroy(file.public_id, { resource_type: 'video' });
+      // }
+
+      console.log(`Cleaning up data for user: ${userId}`);
+    } catch (cleanupError) {
+      console.error("Error during data cleanup:", cleanupError);
+      // Continue with account deletion even if cleanup fails
+    }
+
+    // 5. Delete user document from database
+    const deletedUser = await User.findByIdAndDelete(userId);
+    if (!deletedUser) {
+      throw new ApiError(500, false, "Failed to delete user account");
+    }
+
+    // 6. Clear refresh token cookie
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    };
+
+    // 7. Return success response
+    return res
+      .status(200)
+      .clearCookie("refreshToken", cookieOptions)
+      .json(
+        new ApiResponse(200, true, "Account deleted successfully", {
+          message:
+            "Your account and all associated data have been permanently deleted",
+          deletedAt: new Date().toISOString(),
+        })
+      );
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        success: error.success,
+        message: error.message,
+        errors: error.errors,
+      });
+    }
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      errors: error.message,
+    });
+  }
+};

@@ -6,6 +6,7 @@ import {
   refreshAccessToken,
   getCurrentUser,
   updateUser,
+  deleteAccount,
 } from "../controllers/user.controller.js";
 import { verifyAccessToken } from "../middlewares/auth.middleware.js";
 
@@ -20,5 +21,6 @@ userRouter.route("/refresh-token").post(refreshAccessToken);
 userRouter.route("/logout").post(verifyAccessToken, logoutUser);
 userRouter.route("/current-user").get(verifyAccessToken, getCurrentUser);
 userRouter.route("/update-profile").put(verifyAccessToken, updateUser);
+userRouter.route("/delete-account").delete(verifyAccessToken, deleteAccount);
 
 export default userRouter;
