@@ -10,6 +10,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Eye, EyeOff, Trash2 } from "lucide-react";
+import {
+  showSuccess,
+  showError,
+  showLoading,
+  showInfo,
+  dismiss,
+} from "@/lib/toast";
 
 export default function ProfileSettings({
   user,
@@ -21,7 +28,7 @@ export default function ProfileSettings({
   const [confirmPassword, setConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Form states - initialize with actual user data
+  // Form states
   const [profileData, setProfileData] = useState({
     newFullname: user?.fullname || "",
     newUsername: user?.username || "",
@@ -39,75 +46,82 @@ export default function ProfileSettings({
 
   const handleSaveProfile = async () => {
     setLoading(true);
+    const loadingToast = showLoading("Updating profile...");
 
     try {
-      // Validate passwords match if changing password
+      // Validation
       if (
         profileData.newPassword &&
         profileData.newPassword !== profileData.confirmNewPassword
       ) {
-        alert("New passwords don't match!");
+        dismiss(loadingToast);
+        showError("New passwords don't match!");
         setLoading(false);
         return;
       }
 
-      // Check if any changes were made
+      // Check for changes
       const hasChanges =
         profileData.newFullname !== user?.fullname ||
         profileData.newUsername !== user?.username ||
         profileData.newPassword;
 
       if (!hasChanges) {
-        alert("No changes to save!");
+        dismiss(loadingToast);
+        showInfo("No changes to save!");
         setLoading(false);
         return;
       }
 
+      // Prepare API call
       const API_BASE_URL =
         import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
       const token = localStorage.getItem("accessToken");
 
-      // Prepare update data
       const updateData = {};
-
       if (profileData.newFullname !== user?.fullname) {
         updateData.newFullname = profileData.newFullname;
       }
-
       if (profileData.newUsername !== user?.username) {
         updateData.newUsername = profileData.newUsername;
       }
-
       if (profileData.newPassword) {
         updateData.currentPassword = profileData.currentPassword;
         updateData.newPassword = profileData.newPassword;
       }
 
-      const response = await fetch(
-        `${API_BASE_URL}/voice-web-app/api/users/update-profile`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify(updateData),
-        }
-      );
+      console.log("🔄 Updating profile with data:", updateData);
+      const fullUrl = `${API_BASE_URL}/voice-web-app/api/users/update-profile`;
+      showInfo(`Sending update request...`);
+
+      const response = await fetch(fullUrl, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(updateData),
+      });
 
       const data = await response.json();
+      console.log("📡 Update response:", data);
+
+      dismiss(loadingToast);
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to update profile");
+        const errorMessage = data.message || "Failed to update profile";
+        console.error("❌ Update failed:", { status: response.status, data });
+        showError(`${errorMessage} (${response.status})`);
+        throw new Error(errorMessage);
       }
 
-      // Update user data in parent component
+      // Success
       if (onUserUpdate && data.data) {
         onUserUpdate(data.data);
       }
 
-      alert("Profile updated successfully!");
+      showSuccess("Profile updated successfully! 🎉");
 
       // Reset password fields
       setProfileData((prev) => ({
@@ -117,8 +131,9 @@ export default function ProfileSettings({
         confirmNewPassword: "",
       }));
     } catch (error) {
-      console.error("Update profile error:", error);
-      alert(error.message || "Failed to update profile. Please try again.");
+      console.error("❌ Profile update error:", error);
+      dismiss(loadingToast);
+      showError(error.message || "Failed to update profile. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -130,60 +145,76 @@ export default function ProfileSettings({
     );
 
     if (!currentPassword) {
-      return; // User cancelled
+      showInfo("Account deletion cancelled");
+      return;
     }
 
     if (
-      window.confirm(
-        "Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data."
+      !window.confirm(
+        "⚠️ Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data."
       )
     ) {
-      setLoading(true);
+      showInfo("Account deletion cancelled");
+      return;
+    }
 
-      try {
-        const API_BASE_URL =
-          import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
-        const token = localStorage.getItem("accessToken");
+    setLoading(true);
+    const loadingToast = showLoading("Deleting account...");
 
-        const response = await fetch(
-          `${API_BASE_URL}/voice-web-app/api/users/delete-account`,
-          {
-            method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify({ currentPassword }),
-          }
-        );
+    try {
+      const API_BASE_URL =
+        import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+      const token = localStorage.getItem("accessToken");
 
-        const data = await response.json();
+      console.log("🗑️ Deleting account...");
 
-        if (!response.ok) {
-          throw new Error(data.message || "Failed to delete account");
+      const response = await fetch(
+        `${API_BASE_URL}/voice-web-app/api/users/delete-account`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ currentPassword }),
         }
+      );
 
-        alert("Account deleted successfully!");
+      const data = await response.json();
+      console.log("📡 Delete response:", data);
 
-        // Clear authentication and close modal
-        localStorage.removeItem("isAuthenticated");
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("user");
+      dismiss(loadingToast);
 
-        onClose();
-
-        // Redirect to home page
-        window.location.href = "/";
-      } catch (error) {
-        console.error("Delete account error:", error);
-        alert(error.message || "Failed to delete account. Please try again.");
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        const errorMessage = data.message || "Failed to delete account";
+        console.error("❌ Delete failed:", { status: response.status, data });
+        showError(`${errorMessage} (${response.status})`);
+        throw new Error(errorMessage);
       }
+
+      showSuccess("Account deleted successfully! 👋");
+
+      // Clear auth and redirect
+      localStorage.removeItem("isAuthenticated");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("user");
+
+      onClose();
+
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 2000);
+    } catch (error) {
+      console.error("❌ Delete account error:", error);
+      dismiss(loadingToast);
+      showError(error.message || "Failed to delete account. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
+  // JSX remains the same - just the handlers are updated with toast notifications
   return (
     <div className="space-y-6">
       {/* Profile Information Section */}

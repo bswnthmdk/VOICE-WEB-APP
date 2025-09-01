@@ -18,49 +18,86 @@ import {
 import { Settings, LogOut } from "lucide-react";
 import ProfileSettings from "./ProfileSettings";
 import VoiceTraining from "./VoiceTraining";
+import {
+  showSuccess,
+  showError,
+  showLoading,
+  showInfo,
+  dismiss,
+} from "@/lib/toast";
 
 export default function Profile({ user, onLogout, onUserUpdate }) {
   const [showSettings, setShowSettings] = useState(false);
 
   const handleLogout = async () => {
     if (window.confirm("Are you sure you want to logout?")) {
+      const logoutToast = showLoading("Logging out...");
+
       try {
         // Call the logout function passed from parent
         if (onLogout) {
+          console.log("🔄 Using parent logout function");
           await onLogout();
         } else {
+          console.log("🔄 Using fallback logout");
           // Fallback logout logic
           const API_BASE_URL =
             import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
           const token = localStorage.getItem("accessToken");
 
           if (token) {
-            await fetch(`${API_BASE_URL}/voice-web-app/api/users/logout`, {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-              credentials: "include",
-            });
+            const response = await fetch(
+              `${API_BASE_URL}/voice-web-app/api/users/logout`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+                credentials: "include",
+              }
+            );
+
+            const data = await response.json();
+            console.log("📤 Logout response:", data);
+
+            if (response.ok) {
+              showSuccess("Logged out successfully");
+            } else {
+              showError(`Logout failed: ${data.message}`);
+            }
           }
 
           // Clear authentication data
           localStorage.removeItem("isAuthenticated");
           localStorage.removeItem("accessToken");
           localStorage.removeItem("user");
+          showInfo("Session cleared");
 
           // Redirect to home page
-          window.location.href = "/";
+          setTimeout(() => {
+            window.location.href = "/";
+          }, 1000);
         }
       } catch (error) {
-        console.error("Logout error:", error);
+        console.error("❌ Logout error:", error);
+        dismiss(logoutToast);
+        showError(`Logout error: ${error.message}`);
+
         // Force logout even if API call fails
         localStorage.removeItem("isAuthenticated");
         localStorage.removeItem("accessToken");
         localStorage.removeItem("user");
-        window.location.href = "/";
+        showInfo("Forced logout - session cleared");
+
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 1000);
+      } finally {
+        dismiss(logoutToast);
       }
+    } else {
+      showInfo("Logout cancelled");
     }
   };
 
@@ -112,7 +149,10 @@ export default function Profile({ user, onLogout, onUserUpdate }) {
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className="cursor-pointer"
-            onClick={() => setShowSettings(true)}
+            onClick={() => {
+              setShowSettings(true);
+              showInfo("Opening settings...");
+            }}
           >
             <Settings className="mr-2 h-4 w-4" />
             <span>Settings</span>
