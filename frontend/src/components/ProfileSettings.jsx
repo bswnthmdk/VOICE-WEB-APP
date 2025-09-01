@@ -18,7 +18,7 @@ export default function ProfileSettings({ user, onClose }) {
   // Form states
   const [profileData, setProfileData] = useState({
     fullName: user?.name || "",
-    avatar: user?.avatar || "",
+    username: user?.username || "",
     currentPassword: "",
     newPassword: "",
     confirmNewPassword: "",
@@ -81,7 +81,7 @@ export default function ProfileSettings({ user, onClose }) {
         <CardHeader>
           <CardTitle className="text-lg">Profile Information</CardTitle>
           <CardDescription>
-            Update your personal information and avatar
+            Update your personal information and username
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -96,18 +96,15 @@ export default function ProfileSettings({ user, onClose }) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="avatar">Avatar (Initials)</Label>
+            <Label htmlFor="username">Username</Label>
             <Input
-              id="avatar"
-              value={profileData.avatar}
-              onChange={(e) =>
-                handleInputChange("avatar", e.target.value.toUpperCase())
-              }
-              placeholder="e.g., JD"
-              maxLength={2}
+              id="username"
+              value={profileData.username}
+              onChange={(e) => handleInputChange("username", e.target.value)}
+              placeholder="Enter your username"
             />
             <p className="text-xs text-muted-foreground">
-              Enter 1-2 characters to display as your avatar
+              Choose a unique username for your account
             </p>
           </div>
 
@@ -172,7 +169,7 @@ export default function ProfileSettings({ user, onClose }) {
               placeholder="Enter new password"
             />
             <p className="text-xs text-muted-foreground">
-              Password should be at least 8 characters long
+              Password should be at least 6 characters long
             </p>
           </div>
 
