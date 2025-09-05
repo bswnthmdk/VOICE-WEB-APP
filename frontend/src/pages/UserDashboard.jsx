@@ -28,6 +28,7 @@ import {
   Unplug,
   Signal,
   ShieldAlert,
+  LayoutDashboard,
 } from "lucide-react";
 
 export default function UserDashboard() {

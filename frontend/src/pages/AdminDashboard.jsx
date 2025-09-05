@@ -38,6 +38,7 @@ import {
   Edit3,
   Search,
   ShieldAlert,
+  LayoutDashboard,
 } from "lucide-react";
 
 export default function AdminDashboard() {
