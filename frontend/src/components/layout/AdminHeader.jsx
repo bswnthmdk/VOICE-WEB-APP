@@ -8,7 +8,7 @@ export function AdminHeader({
   onLogout,
   onUserUpdate,
   title = "Admin Dashboard",
-  subtitle = "Welcome back, Administrator",
+  subtitle = "Welcome back",
 }) {
   const { theme, setTheme } = useTheme();
 

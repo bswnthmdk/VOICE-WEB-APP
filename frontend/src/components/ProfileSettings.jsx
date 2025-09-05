@@ -62,8 +62,8 @@ export default function ProfileSettings({
 
       // Check for changes
       const hasChanges =
-        profileData.newFullname !== user?.fullname ||
-        profileData.newUsername !== user?.username ||
+        profileData.newFullname !== (user?.fullname || "") ||
+        profileData.newUsername !== (user?.username || "") ||
         profileData.newPassword;
 
       if (!hasChanges) {

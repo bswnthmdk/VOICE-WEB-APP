@@ -310,6 +310,7 @@ const DashboardWrapper = () => {
 
 const AdminDashboardWrapper = () => {
   const { user, updateUser, logout } = useAuth();
+  console.log("AdminDashboard - user data:", user); // Add this for debugging
   return <AdminDashboard user={user} updateUser={updateUser} logout={logout} />;
 };
 

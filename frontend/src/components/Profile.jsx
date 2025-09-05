@@ -114,7 +114,7 @@ export default function Profile({ user, onLogout, onUserUpdate }) {
     if (user?.username) {
       return user.username.charAt(0).toUpperCase();
     }
-    return "U";
+    return "NA";
   };
 
   return (
