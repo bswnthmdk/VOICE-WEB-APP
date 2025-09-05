@@ -10,6 +10,8 @@ export function UserHeader({
   title,
   subtitle,
   user = null,
+  onLogout,
+  onUserUpdate,
 }) {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
@@ -68,7 +70,13 @@ export function UserHeader({
             <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
           </Button>
-          {user && <Profile user={user} />}
+          {user && (
+            <Profile
+              user={user}
+              onLogout={onLogout}
+              onUserUpdate={onUserUpdate}
+            />
+          )}
         </div>
       </div>
     </header>

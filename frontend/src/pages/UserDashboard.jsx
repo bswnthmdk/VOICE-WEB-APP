@@ -1,13 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -31,7 +25,7 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 
-export default function UserDashboard() {
+export default function UserDashboard({ user, updateUser, logout }) {
   const navigate = useNavigate();
   const [dashboardMode, setDashboardMode] = useState("user");
   const [showConnectModal, setShowConnectModal] = useState(false);
@@ -44,10 +38,9 @@ export default function UserDashboard() {
 
   // Use real user data passed from parent
   const currentUser = user || {
-    name: "Loading...",
+    fullname: "fullname",
+    username: "username",
     email: "loading@example.com",
-    role: "user",
-    avatar: "L",
   };
 
   const [connectedLocks, setConnectedLocks] = useState([
@@ -180,8 +173,12 @@ export default function UserDashboard() {
     <div className="min-h-screen bg-background">
       <UserHeader
         user={currentUser}
+        onLogout={logout}
+        onUserUpdate={updateUser}
         title="Lock Management"
-        subtitle="Manage your connected smart locks"
+        subtitle={`Welcome back, ${
+          currentUser.fullname || currentUser.username
+        }`}
       />
       <div className="flex justify-center my-3">
         <div className="grid grid-cols-2 gap-1 p-1 bg-muted rounded-lg w-fit">

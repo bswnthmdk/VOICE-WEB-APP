@@ -41,7 +41,7 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ user, updateUser, logout }) {
   const navigate = useNavigate();
   const [dashboardMode, setDashboardMode] = useState("admin");
   const [showAddLock, setShowAddLock] = useState(false);
@@ -65,10 +65,9 @@ export default function AdminDashboard() {
   });
 
   const adminUser = user || {
-    name: "Loading...",
+    fullname: "fullname",
+    username: "username",
     email: "loading@example.com",
-    role: "user",
-    avatar: "L",
   };
 
   // Mock data
@@ -490,8 +489,10 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-background">
       <AdminHeader
         user={adminUser}
+        onLogout={logout}
+        onUserUpdate={updateUser}
         title="Admin Dashboard"
-        subtitle="Welcome back, Administrator"
+        subtitle={`Welcome back, ${adminUser.fullname || adminUser.username}`}
       />
       <div className="flex justify-center my-3">
         <div className="grid grid-cols-2 gap-1 p-1 bg-muted rounded-lg w-fit">
