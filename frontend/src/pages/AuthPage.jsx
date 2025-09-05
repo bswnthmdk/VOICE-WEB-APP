@@ -22,7 +22,7 @@ import {
   dismiss,
 } from "@/lib/toast";
 
-export default function AuthPage() {
+export default function AuthPage({ onLogin }) {
   const [mode, setMode] = useState("login");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -125,26 +125,8 @@ export default function AuthPage() {
       if (isLogin) {
         console.log("✅ Login successful:", data.data);
 
-        // Save authentication state and user data
-        localStorage.setItem("isAuthenticated", "true");
-
-        // Store access token if provided
-        if (data.data?.accessToken) {
-          localStorage.setItem("accessToken", data.data.accessToken);
-          console.log("🔑 Access token stored");
-        }
-
-        // Store user info
-        if (data.data?.user) {
-          localStorage.setItem("user", JSON.stringify(data.data.user));
-          console.log("👤 User data stored:", data.data.user);
-        }
-
-        showSuccess(
-          `Welcome back, ${
-            data.data?.user?.fullname || data.data?.user?.username || "User"
-          }!`
-        );
+        // Use the onLogin function from AuthProvider
+        onLogin(data.data.user, data.data.accessToken);
 
         // Navigate to dashboard after a short delay
         setTimeout(() => {
