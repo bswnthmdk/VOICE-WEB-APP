@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { AdminHeader } from "@/components/layout/AdminHeader";
 import {
   Lock,
@@ -38,6 +37,7 @@ import {
   ChevronDown,
   Edit3,
   Search,
+  ShieldAlert,
 } from "lucide-react";
 
 export default function AdminDashboard() {

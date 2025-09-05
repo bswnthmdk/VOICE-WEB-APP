@@ -26,9 +26,8 @@ import {
   Wifi,
   Shield,
   Unplug,
-  MapPin,
-  Battery,
   Signal,
+  ShieldAlert,
 } from "lucide-react";
 
 export default function UserDashboard() {
