@@ -21,6 +21,7 @@ import {
   Shield,
   Unplug,
   Signal,
+  Mic,
   ShieldAlert,
   LayoutDashboard,
 } from "lucide-react";

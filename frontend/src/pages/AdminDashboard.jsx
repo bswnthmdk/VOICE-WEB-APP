@@ -37,6 +37,7 @@ import {
   ChevronDown,
   Edit3,
   Search,
+  Mic,
   ShieldAlert,
   LayoutDashboard,
 } from "lucide-react";
