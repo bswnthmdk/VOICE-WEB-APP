@@ -42,13 +42,13 @@ export default function UserDashboard() {
     joinCode: "",
   });
 
-  // Mock user data
-  const [user] = useState({
-    name: "John Doe",
-    email: "john.doe@company.com",
+  // Use real user data passed from parent
+  const currentUser = user || {
+    name: "Loading...",
+    email: "loading@example.com",
     role: "user",
-    avatar: "JD",
-  });
+    avatar: "L",
+  };
 
   const [connectedLocks, setConnectedLocks] = useState([
     {
@@ -179,7 +179,7 @@ export default function UserDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <UserHeader
-        user={user}
+        user={currentUser}
         title="Lock Management"
         subtitle="Manage your connected smart locks"
       />

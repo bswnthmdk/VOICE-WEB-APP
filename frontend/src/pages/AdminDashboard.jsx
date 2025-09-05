@@ -64,13 +64,12 @@ export default function AdminDashboard() {
     adminPassword: "",
   });
 
-  // Mock admin user data
-  const [adminUser] = useState({
-    name: "Biswanath Modak",
-    email: "admin@voiceauth.com",
-    role: "admin",
-    avatar: "BM",
-  });
+  const adminUser = user || {
+    name: "Loading...",
+    email: "loading@example.com",
+    role: "user",
+    avatar: "L",
+  };
 
   // Mock data
   const [locks, setLocks] = useState([
