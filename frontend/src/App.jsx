@@ -290,9 +290,9 @@ const PublicRoute = ({ children, redirectToDashboard = false }) => {
   const { isAuthenticated } = useAuth();
 
   if (isAuthenticated && redirectToDashboard) {
-    console.log("Already logged in, redirecting to dashboard");
-    showInfo("Already logged in, redirecting to dashboard");
-    return <Navigate to="/dashboard" replace />;
+    console.log("Already logged in, redirecting to admin dashboard");
+    showInfo("Already logged in, redirecting to admin dashboard");
+    return <Navigate to="/admin-dashboard" replace />;
   }
   return children;
 };

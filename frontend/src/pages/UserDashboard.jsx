@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,7 +24,6 @@ import {
   Lock,
   Key,
   Wifi,
-  Clock,
   Shield,
   Unplug,
   MapPin,
@@ -32,6 +32,8 @@ import {
 } from "lucide-react";
 
 export default function UserDashboard() {
+  const navigate = useNavigate();
+  const [dashboardMode, setDashboardMode] = useState("user");
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [showLockModal, setShowLockModal] = useState(false);
   const [selectedLock, setSelectedLock] = useState(null);
@@ -98,6 +100,15 @@ export default function UserDashboard() {
       connectedSince: "April 10, 2024",
     },
   ]);
+
+  const handleDashboardToggle = (mode) => {
+    if (mode !== dashboardMode) {
+      setDashboardMode(mode);
+      if (mode === "admin") {
+        navigate("/admin-dashboard");
+      }
+    }
+  };
 
   const handleConnectLock = () => {
     if (!connectData.lockId || !connectData.joinCode) {
@@ -172,6 +183,24 @@ export default function UserDashboard() {
         title="Lock Management"
         subtitle="Manage your connected smart locks"
       />
+      <div className="flex justify-center mb-6">
+        <div className="grid grid-cols-2 gap-1 p-1 bg-muted rounded-lg w-fit">
+          <Button
+            variant={dashboardMode === "admin" ? "default" : "ghost"}
+            onClick={() => handleDashboardToggle("admin")}
+          >
+            <ShieldAlert className="w-3 h-3 mr-1.5" />
+            Admin
+          </Button>
+          <Button
+            variant={dashboardMode === "user" ? "default" : "ghost"}
+            onClick={() => handleDashboardToggle("user")}
+          >
+            <LayoutDashboard className="w-3 h-3 mr-1.5" />
+            User
+          </Button>
+        </div>
+      </div>
 
       <div className="container mx-auto px-4 sm:px-6 py-6">
         {/* UserHeader Section with Connect Button */}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -40,6 +41,8 @@ import {
 } from "lucide-react";
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
+  const [dashboardMode, setDashboardMode] = useState("admin");
   const [showAddLock, setShowAddLock] = useState(false);
   const [showUserDetailsModal, setShowUserDetailsModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
@@ -360,6 +363,15 @@ export default function AdminDashboard() {
     },
   ];
 
+  const handleDashboardToggle = (mode) => {
+    if (mode !== dashboardMode) {
+      setDashboardMode(mode);
+      if (mode === "user") {
+        navigate("/user-dashboard");
+      }
+    }
+  };
+
   const handleLockClick = (lock) => {
     setSelectedLock(lock);
     setShowLockDetailsModal(true);
@@ -481,6 +493,24 @@ export default function AdminDashboard() {
         title="Admin Dashboard"
         subtitle="Welcome back, Administrator"
       />
+      <div className="flex justify-center mb-6">
+        <div className="grid grid-cols-2 gap-1 p-1 bg-muted rounded-lg w-fit">
+          <Button
+            variant={dashboardMode === "admin" ? "default" : "ghost"}
+            onClick={() => handleDashboardToggle("admin")}
+          >
+            <ShieldAlert className="w-3 h-3 mr-1.5" />
+            Admin
+          </Button>
+          <Button
+            variant={dashboardMode === "user" ? "default" : "ghost"}
+            onClick={() => handleDashboardToggle("user")}
+          >
+            <LayoutDashboard className="w-3 h-3 mr-1.5" />
+            User
+          </Button>
+        </div>
+      </div>
 
       <div className="container mx-auto px-4 sm:px-6 py-6">
         {/* Header Section with Connected Users and Add New Lock */}

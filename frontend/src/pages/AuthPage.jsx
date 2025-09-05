@@ -128,9 +128,9 @@ export default function AuthPage({ onLogin }) {
         // Use the onLogin function from AuthProvider
         onLogin(data.data.user, data.data.accessToken);
 
-        // Navigate to dashboard after a short delay
+        // Navigate to admin dashboard after a short delay
         setTimeout(() => {
-          navigate("/dashboard");
+          navigate("/admin-dashboard");
         }, 1500);
       } else {
         console.log("✅ Signup successful:", data.data);
