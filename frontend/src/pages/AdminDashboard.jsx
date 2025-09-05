@@ -494,7 +494,7 @@ export default function AdminDashboard() {
         title="Admin Dashboard"
         subtitle="Welcome back, Administrator"
       />
-      <div className="flex justify-center mb-6">
+      <div className="flex justify-center my-3">
         <div className="grid grid-cols-2 gap-1 p-1 bg-muted rounded-lg w-fit">
           <Button
             variant={dashboardMode === "admin" ? "default" : "ghost"}
