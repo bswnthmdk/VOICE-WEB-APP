@@ -309,13 +309,38 @@ const DashboardWrapper = () => {
 };
 
 const AdminDashboardWrapper = () => {
-  const { user, updateUser, logout } = useAuth();
-  console.log("AdminDashboard - user data:", user); // Add this for debugging
+  const { user, updateUser, logout, loading } = useAuth();
+
+  // Add loading check here
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 bg-primary rounded-lg animate-pulse" />
+          <span className="font-serif text-xl font-bold">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
   return <AdminDashboard user={user} updateUser={updateUser} logout={logout} />;
 };
 
 const UserDashboardWrapper = () => {
-  const { user, updateUser, logout } = useAuth();
+  const { user, updateUser, logout, loading } = useAuth();
+
+  // Add loading check here
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 bg-primary rounded-lg animate-pulse" />
+          <span className="font-serif text-xl font-bold">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
   return <UserDashboard user={user} updateUser={updateUser} logout={logout} />;
 };
 
