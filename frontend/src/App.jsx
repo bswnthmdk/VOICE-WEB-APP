@@ -185,9 +185,11 @@ const AuthProvider = ({ children }) => {
 
   // Login function - called from AuthPage
   const login = (userData, accessToken) => {
-    console.log("🔄 Login function called with:", { userData, accessToken });
+    console.log("🔄 Login function called with:", {
+      userData: userData ? { ...userData, password: undefined } : null,
+      hasAccessToken: !!accessToken,
+    });
 
-    // Defensive checks
     if (!userData) {
       console.error("❌ Login failed: userData is undefined");
       showError("Login failed: User data is missing");
@@ -200,11 +202,10 @@ const AuthProvider = ({ children }) => {
       return;
     }
 
-    // Validate user data structure
-    if (!userData.username && !userData.email) {
-      console.error("❌ Login failed: Invalid user data structure", userData);
-      showError("Login failed: Invalid user data");
-      return;
+    // Ensure fullname exists
+    if (!userData.fullname) {
+      userData.fullname = userData.username || "User";
+      console.log("Added fallback fullname in login:", userData.fullname);
     }
 
     setUser(userData);
@@ -214,10 +215,7 @@ const AuthProvider = ({ children }) => {
     localStorage.setItem("user", JSON.stringify(userData));
 
     console.log("✅ Login successful:", userData);
-
-    // Use optional chaining and fallback
-    const displayName = userData?.fullname || userData?.username || "User";
-    showSuccess(`Welcome back, ${displayName}!`);
+    showSuccess(`Welcome back, ${userData.fullname}!`);
   };
 
   // Logout function

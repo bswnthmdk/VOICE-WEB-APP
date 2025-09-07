@@ -126,20 +126,40 @@ export const refreshAccessToken = async (req, res) => {
 };
 
 export const getCurrentUser = async (req, res) => {
-  console.log("Get current user request for:", req.user.username);
+  console.log("Get current user request for:", req.user?.username || "unknown");
 
   try {
-    console.log("Returning user data:", {
-      id: req.user._id,
+    if (!req.user) {
+      console.error("❌ req.user is undefined");
+      throw new ApiError(401, false, "User not found in request");
+    }
+
+    console.log("User data from req.user:", JSON.stringify(req.user, null, 2));
+
+    // Ensure fullname exists
+    const userData = {
+      _id: req.user._id,
       username: req.user.username,
+      fullname: req.user.fullname || req.user.username || "User",
       email: req.user.email,
-    });
+      createdAt: req.user.createdAt,
+      updatedAt: req.user.updatedAt,
+    };
+
+    console.log("Processed user data:", JSON.stringify(userData, null, 2));
 
     return res
       .status(200)
-      .json(new ApiResponse(200, true, "User fetched successfully", req.user));
+      .json(new ApiResponse(200, true, "User fetched successfully", userData));
   } catch (error) {
     console.error("Get current user error:", error);
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json({
+        success: error.success,
+        message: error.message,
+        errors: error.errors,
+      });
+    }
     return res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -279,21 +299,33 @@ export const loginUser = async (req, res) => {
     };
 
     console.log("Setting cookies with options:", cookieOptions);
+    const responseData = {
+      user: loggedInUser,
+      accessToken,
+    };
+
+    console.log("=== BACKEND DEBUG ===");
+    console.log("User data:", JSON.stringify(loggedInUser, null, 2));
+    console.log("Response data:", JSON.stringify(responseData, null, 2));
+
     console.log("Login successful for user:", {
       id: loggedInUser._id,
       username: loggedInUser.username,
       email: loggedInUser.email,
     });
 
+    const finalResponse = new ApiResponse(
+      200,
+      true,
+      "User logged in successfully",
+      responseData
+    );
+    console.log("Final response:", JSON.stringify(finalResponse, null, 2));
+
     return res
       .status(200)
       .cookie("refreshToken", refreshToken, cookieOptions)
-      .json(
-        new ApiResponse(200, true, "User logged in successfully", {
-          user: loggedInUser,
-          accessToken,
-        })
-      );
+      .json(finalResponse);
   } catch (error) {
     console.error("Login error:", error);
     if (error instanceof ApiError) {

@@ -117,68 +117,37 @@ export default function AuthPage({ onLogin }) {
       }
 
       if (isLogin) {
-        console.log("✅ Login successful - Full response:", data);
+        console.log("=== FRONTEND DEBUG ===");
+        console.log("Full response:", JSON.stringify(data, null, 2));
 
-        // Flexible extraction to handle different API response formats
-        let userData, accessToken;
+        // Extract user data and token
+        const userData = data.data?.user || data.user;
+        const accessToken = data.data?.accessToken || data.accessToken;
 
-        // Try different possible response structures
-        if (data.data?.user && data.data?.accessToken) {
-          // Format: { data: { user: {...}, accessToken: "..." } }
-          userData = data.data.user;
-          accessToken = data.data.accessToken;
-          console.log("📊 Using nested data format");
-        } else if (data.user && (data.accessToken || data.token)) {
-          // Format: { user: {...}, accessToken/token: "..." }
-          userData = data.user;
-          accessToken = data.accessToken || data.token;
-          console.log("📊 Using direct property format");
-        } else if (data.data && (data.accessToken || data.token)) {
-          // Format: { data: {...user props}, accessToken/token: "..." }
-          userData = data.data;
-          accessToken = data.accessToken || data.token;
-          console.log("📊 Using data as user format");
-        } else {
-          // Fallback: assume the entire data object is the user data
-          userData = data;
-          accessToken = data.accessToken || data.token;
-          console.log("📊 Using fallback format");
-        }
+        console.log("Extracted userData:", userData);
+        console.log("Has accessToken:", !!accessToken);
 
-        console.log("🔑 Extracted login data:", {
-          userData: userData ? { ...userData, password: undefined } : null,
-          hasAccessToken: !!accessToken,
-        });
-
-        // Validate extracted data
         if (!userData) {
-          console.error("❌ No user data found in response structure");
-          showError(
-            "Login successful but user data format is unexpected. Check console for details."
-          );
+          console.error("❌ No user data found");
+          showError("Login failed: No user data received");
           return;
         }
 
         if (!accessToken) {
-          console.error("❌ No access token found in response structure");
-          showError(
-            "Login successful but access token is missing. Check console for details."
-          );
+          console.error("❌ No access token found");
+          showError("Login failed: No access token received");
           return;
         }
 
-        // Additional validation
-        if (!userData.username && !userData.email) {
-          console.error("❌ User data missing required fields:", userData);
-          showError("Login successful but user data is incomplete");
-          return;
+        // Add fallback for fullname if missing
+        if (!userData.fullname) {
+          userData.fullname = userData.username || "User";
+          console.log("Added fallback fullname:", userData.fullname);
         }
 
-        // Call onLogin with validated data
-        console.log("🚀 Calling onLogin with validated data");
+        console.log("✅ Login successful:", userData);
         onLogin(userData, accessToken);
 
-        // Navigate to admin dashboard after a short delay
         setTimeout(() => {
           navigate("/admin-dashboard");
         }, 1500);
