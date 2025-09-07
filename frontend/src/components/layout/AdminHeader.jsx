@@ -59,11 +59,13 @@ export function AdminHeader({
             <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
           </Button>
-          <Profile
-            user={user}
-            onLogout={onLogout}
-            onUserUpdate={onUserUpdate}
-          />
+          {user && (
+            <Profile
+              user={user}
+              onLogout={onLogout}
+              onUserUpdate={onUserUpdate}
+            />
+          )}
         </div>
       </div>
     </header>

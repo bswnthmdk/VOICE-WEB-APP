@@ -43,21 +43,6 @@ import {
 } from "lucide-react";
 
 export default function AdminDashboard({ user, updateUser, logout }) {
-  // Add this right after the component function declaration
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center animate-pulse">
-            <Mic className="w-6 h-6 text-primary-foreground" />
-          </div>
-          <span className="font-serif text-xl font-bold">
-            Loading user data...
-          </span>
-        </div>
-      </div>
-    );
-  }
   const navigate = useNavigate();
   const [dashboardMode, setDashboardMode] = useState("admin");
   const [showAddLock, setShowAddLock] = useState(false);
@@ -81,9 +66,9 @@ export default function AdminDashboard({ user, updateUser, logout }) {
   });
 
   const adminUser = {
-    fullname: user?.fullname || "fullname",
-    username: user?.username || "username",
-    email: user?.email || "loading@example.com",
+    fullname: user?.fullname || "Administrator",
+    username: user?.username || "admin",
+    email: user?.email || "admin@system.com",
   };
 
   // Mock data
@@ -508,9 +493,7 @@ export default function AdminDashboard({ user, updateUser, logout }) {
         onLogout={logout}
         onUserUpdate={updateUser}
         title="Admin Dashboard"
-        subtitle={`Welcome back, ${
-          user?.fullname || user?.username || "Administrator"
-        }`}
+        subtitle={`Welcome back, ${adminUser.fullname}`}
       />
       <div className="flex justify-center my-3">
         <div className="grid grid-cols-2 gap-1 p-1 bg-muted rounded-lg w-fit">
