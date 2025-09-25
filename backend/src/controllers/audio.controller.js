@@ -11,13 +11,25 @@ export const uploadTrainingAudio = async (req, res) => {
       });
     }
 
-    // Upload to Cloudinary and get the URL
-    const audioUrl = await uploadOnCloudinary(req.file.path, PROJECT_FOLDER);
+    const { ownerName } = req.body; // 👈 get owner name from request
+    if (!ownerName) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Owner name is required" });
+    }
+
+    // Upload with owner metadata
+    const result = await uploadOnCloudinary(
+      req.file.path,
+      PROJECT_FOLDER,
+      ownerName
+    );
 
     res.json({
       message: "File uploaded successfully",
       success: true,
-      url: audioUrl,
+      url: result.secure_url,
+      owner: ownerName,
     });
   } catch (error) {
     console.error(error);

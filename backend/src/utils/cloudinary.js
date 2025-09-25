@@ -1,7 +1,11 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 
-export const uploadOnCloudinary = async (localFilePath, folderName) => {
+export const uploadOnCloudinary = async (
+  localFilePath,
+  folderName,
+  userName
+) => {
   try {
     // Cloudinary config
     cloudinary.config({
@@ -17,6 +21,7 @@ export const uploadOnCloudinary = async (localFilePath, folderName) => {
       resource_type: "video", // required for audio
       folder: folderName,
       use_filename: true,
+      context: { owner: userName },
     });
     console.log("Successfully uploaded to Cloudinary");
 

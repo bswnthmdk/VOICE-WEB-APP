@@ -15,6 +15,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Mic, MicOff, Check, RotateCcw, Brain } from "lucide-react";
+// Import toast functions
+import { showSuccess, showError, showLoading, dismiss } from "@/lib/toast";
 
 export default function VoiceTraining({ onClose }) {
   // Voice training states
@@ -25,6 +27,8 @@ export default function VoiceTraining({ onClose }) {
   const [completedSentences, setCompletedSentences] = useState([]);
   const [hasRecording, setHasRecording] = useState(false);
   const [isTrainingComplete, setIsTrainingComplete] = useState(false);
+  // New state to manage submission loading and button disabling
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Sample sentences for voice training
   const trainingSentences = [
@@ -36,6 +40,7 @@ export default function VoiceTraining({ onClose }) {
   ];
 
   const startRecording = () => {
+    // ... (rest of startRecording remains the same)
     setIsRecording(true);
     setHasRecording(false);
     setRecordingTime(0);
@@ -54,42 +59,92 @@ export default function VoiceTraining({ onClose }) {
   };
 
   const stopRecording = () => {
+    // ... (rest of stopRecording remains the same)
     setIsRecording(false);
     setHasRecording(true);
     setRecordingTime(0);
   };
 
-  const submitRecording = () => {
-    // Simulate voice matching (randomly pass/fail for demo)
-    const isMatch = Math.random() > 0.3; // 70% success rate for demo
+  const submitRecording = async () => {
+    const expectedSentence = trainingSentences[currentSentenceIndex];
 
-    if (isMatch) {
-      const newCompleted = [...completedSentences, currentSentenceIndex];
-      setCompletedSentences(newCompleted);
+    // --- START: Simulate Transcription and Validation Process ---
+    const loadingToast = showLoading("Transcribing and validating voice...");
+    setIsSubmitting(true);
 
-      if (currentSentenceIndex < trainingSentences.length - 1) {
-        setCurrentSentenceIndex(currentSentenceIndex + 1);
-        setHasRecording(false);
+    try {
+      // 1. Simulate Audio Upload and Transcription (in a real app, this would be an API call)
+      // For demo, simulate a 70% success rate with transcription matching the sentence exactly.
+      const isPerfectMatch = Math.random() > 0.3; // 70% chance of a perfect match
+      const mockTranscription = isPerfectMatch
+        ? expectedSentence
+        : Math.random() > 0.5
+        ? "Open the door now"
+        : "Wrong phrase spoken";
+
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // 2. Clean text for comparison (ignore case and punctuation)
+      const cleanText = (text) =>
+        text
+          .toLowerCase()
+          .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+          .trim();
+      const cleanedExpected = cleanText(expectedSentence);
+      const cleanedTranscription = cleanText(mockTranscription);
+
+      const isMatch = cleanedTranscription === cleanedExpected;
+
+      dismiss(loadingToast);
+
+      if (isMatch) {
+        showSuccess(`✅ Voice Matched! Transcribed: "${mockTranscription}"`);
+        const newCompleted = [...completedSentences, currentSentenceIndex];
+        setCompletedSentences(newCompleted);
+
+        if (currentSentenceIndex < trainingSentences.length - 1) {
+          setCurrentSentenceIndex(currentSentenceIndex + 1);
+          setHasRecording(false);
+        } else {
+          // All sentences completed
+          setIsTrainingComplete(true);
+        }
       } else {
-        // All sentences completed
-        setIsTrainingComplete(true);
+        showError(
+          `❌ Voice Mismatch. Transcribed: "${mockTranscription}" vs. Expected: "${expectedSentence}"`
+        );
+        setHasRecording(false);
       }
-    } else {
-      alert("Voice doesn't match the sentence. Please try again.");
+    } catch (error) {
+      dismiss(loadingToast);
+      showError(`Submission failed: ${error.message}`);
       setHasRecording(false);
+    } finally {
+      setIsSubmitting(false);
     }
+    // --- END: Simulate Transcription and Validation Process ---
   };
 
   const trainModel = () => {
     // Simulate model training
-    alert(
-      "Voice model training started! This process may take a few minutes. You will be notified when complete."
+    dismiss(); // Dismiss any existing toasts
+    const trainingToast = showLoading(
+      "Voice model training started! This may take a few moments..."
     );
-    setShowVoiceTraining(false);
-    onClose(); // Close the main settings dialog
 
-    // Reset training state for next time
-    resetVoiceTraining();
+    // Simulate training delay
+    setTimeout(() => {
+      dismiss(trainingToast);
+      showSuccess(
+        "Voice model trained successfully! Authentication is now ready."
+      );
+      setShowVoiceTraining(false);
+      onClose(); // Close the main settings dialog
+
+      // Reset training state for next time
+      resetVoiceTraining();
+    }, 3000);
   };
 
   const resetVoiceTraining = () => {
