@@ -1,6 +1,6 @@
-// frontend/src/components/VoiceTraining.jsx
+// frontend/src/components/VoiceTraining.jsx - FIXED VERSION
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -25,11 +25,15 @@ import {
   dismiss,
 } from "@/lib/toast";
 
-// The component now accepts 'user' prop
 export default function VoiceTraining({ user, onClose }) {
   const TOTAL_SENTENCES = 5;
   const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+
+  // Voice recording refs
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const currentRecordingRef = useRef(null);
 
   // Voice training states
   const [showVoiceTraining, setShowVoiceTraining] = useState(false);
@@ -37,10 +41,10 @@ export default function VoiceTraining({ user, onClose }) {
   const [recordingTime, setRecordingTime] = useState(0);
   const [hasRecording, setHasRecording] = useState(false);
 
-  // New states for multi-stage flow
+  // Multi-stage flow states
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [recordedAudioIds, setRecordedAudioIds] = useState([]); // Stores simulated audio IDs for successful recordings
-  const [cloudinaryUrls, setCloudinaryUrls] = useState([]); // Stores Cloudinary URLs after upload
+  const [recordedAudioBlobs, setRecordedAudioBlobs] = useState([]); // Store actual audio blobs
+  const [cloudinaryUrls, setCloudinaryUrls] = useState([]);
   const [isUploadComplete, setIsUploadComplete] = useState(false);
   const [isModelTrained, setIsModelTrained] = useState(false);
 
@@ -53,19 +57,61 @@ export default function VoiceTraining({ user, onClose }) {
     "System unlock confirmed",
   ];
 
-  // Helper to simulate UUID for a local audio file
-  const generateSimulatedAudioId = () => {
-    return `local_audio_${Date.now()}_${Math.random()
-      .toString(36)
-      .substring(2, 9)}.wav`;
+  // Initialize media recorder
+  const initializeMediaRecorder = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          sampleRate: 16000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+        },
+      });
+
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: "audio/webm;codecs=opus",
+      });
+
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/webm;codecs=opus",
+        });
+        currentRecordingRef.current = audioBlob;
+        setHasRecording(true);
+
+        // Stop all tracks to free up microphone
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      return mediaRecorder;
+    } catch (error) {
+      console.error("Error accessing microphone:", error);
+      showError("Could not access microphone. Please check permissions.");
+      return null;
+    }
   };
 
-  const startRecording = () => {
+  const startRecording = async () => {
+    const mediaRecorder = await initializeMediaRecorder();
+    if (!mediaRecorder) return;
+
+    mediaRecorderRef.current = mediaRecorder;
     setIsRecording(true);
     setHasRecording(false);
     setRecordingTime(0);
 
-    // Simulate recording with timer
+    mediaRecorder.start();
+
+    // Start timer
     const timer = setInterval(() => {
       setRecordingTime((prev) => {
         if (prev >= 10) {
@@ -79,60 +125,52 @@ export default function VoiceTraining({ user, onClose }) {
   };
 
   const stopRecording = () => {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state === "recording"
+    ) {
+      mediaRecorderRef.current.stop();
+    }
     setIsRecording(false);
-    setHasRecording(true);
     setRecordingTime(0);
   };
 
   const submitRecording = async () => {
-    // Current sentence is determined by the number of successful recordings
-    if (isSubmitting || recordedAudioIds.length === TOTAL_SENTENCES) return;
+    if (
+      isSubmitting ||
+      recordedAudioBlobs.length === TOTAL_SENTENCES ||
+      !currentRecordingRef.current
+    ) {
+      return;
+    }
 
-    const expectedSentence = trainingSentences[recordedAudioIds.length];
-    const loadingToast = showLoading("Transcribing and validating voice...");
+    const expectedSentence = trainingSentences[recordedAudioBlobs.length];
+    const loadingToast = showLoading("Validating voice...");
     setIsSubmitting(true);
 
     try {
-      // 1. Simulate Audio Upload and Transcription
-      // For demo, simulate a 70% success rate with transcription matching the sentence exactly.
-      const isPerfectMatch = Math.random() > 0.3;
-      const mockTranscription = isPerfectMatch
-        ? expectedSentence
-        : Math.random() > 0.5
-        ? "Open the door now"
-        : "Wrong phrase spoken";
+      // For demo: simulate transcription validation
+      // In production, you'd send the audio to a speech-to-text service
+      const isMatch = Math.random() > 0.3; // 70% success rate for demo
 
-      // Simulate API delay
       await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // 2. Clean text for comparison (ignore case and punctuation)
-      const cleanText = (text) =>
-        text
-          .toLowerCase()
-          .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
-          .trim();
-      const cleanedExpected = cleanText(expectedSentence);
-      const cleanedTranscription = cleanText(mockTranscription);
-
-      const isMatch = cleanedTranscription === cleanedExpected;
 
       dismiss(loadingToast);
 
       if (isMatch) {
         showSuccess(
-          `✅ Voice Matched for Sentence ${recordedAudioIds.length + 1}!`
+          `✅ Voice Matched for Sentence ${recordedAudioBlobs.length + 1}!`
         );
 
-        // Simulate storing local audio file by adding a temporary ID
-        setRecordedAudioIds((prev) => [...prev, generateSimulatedAudioId()]);
+        // Store the actual audio blob
+        setRecordedAudioBlobs((prev) => [...prev, currentRecordingRef.current]);
+        currentRecordingRef.current = null;
 
-        if (recordedAudioIds.length + 1 < TOTAL_SENTENCES) {
+        if (recordedAudioBlobs.length + 1 < TOTAL_SENTENCES) {
           setHasRecording(false);
         }
       } else {
-        showError(
-          `❌ Voice Mismatch. Transcribed: "${mockTranscription}" vs. Expected: "${expectedSentence}"`
-        );
+        showError(`❌ Voice Mismatch. Please try again.`);
         setHasRecording(false);
       }
     } catch (error) {
@@ -145,40 +183,55 @@ export default function VoiceTraining({ user, onClose }) {
   };
 
   const handleUploadVoices = async () => {
-    if (isSubmitting || recordedAudioIds.length !== TOTAL_SENTENCES) return;
+    if (isSubmitting || recordedAudioBlobs.length !== TOTAL_SENTENCES) return;
 
-    const uploadToast = showLoading("Uploading 5 audio files to Cloudinary...");
+    const uploadToast = showLoading("Uploading audio files to Cloudinary...");
     setIsSubmitting(true);
 
     try {
-      // NOTE: In a real app, you would fetch the actual audio Blobs/Files
-      // and send them one by one using FormData with the /upload-audio endpoint.
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
 
-      const uploadPromises = recordedAudioIds.map((audioId, index) => {
-        // --- START: Simulate Backend File Upload ---
+      const uploadPromises = recordedAudioBlobs.map(
+        async (audioBlob, index) => {
+          const formData = new FormData();
 
-        // Mock unique Cloudinary URL for simulation purposes
-        const mockCloudinaryUrl = `${
-          API_BASE_URL.split("/voice-web-app/api")[0]
-        }/res.cloudinary.com/dph8p9dwh/video/upload/v175588797${index}/${audioId.replace(
-          ".wav",
-          ""
-        )}`;
+          // Convert blob to file with proper name
+          const audioFile = new File(
+            [audioBlob],
+            `voice_sample_${index + 1}.webm`,
+            {
+              type: "audio/webm",
+            }
+          );
 
-        // Simulate fetch call to local backend /upload-audio endpoint
-        return new Promise((resolve) => {
-          setTimeout(() => {
-            // Mock success response from backend's uploadTrainingAudio
-            resolve({
-              success: true,
-              url: mockCloudinaryUrl,
-              message: `Upload successful for sample ${index + 1}`,
-            });
-          }, 500 + index * 100);
-        });
+          formData.append("audio", audioFile);
+          formData.append("ownerName", user?.username || "unknown");
 
-        // --- END: Simulate Backend File Upload ---
-      });
+          const response = await fetch(
+            `${API_BASE_URL}/voice-web-app/api/audio/upload-audio`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              body: formData,
+            }
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(
+              errorData.message || `Upload failed for sample ${index + 1}`
+            );
+          }
+
+          const result = await response.json();
+          return result;
+        }
+      );
 
       const uploadResults = await Promise.all(uploadPromises);
 
@@ -192,10 +245,10 @@ export default function VoiceTraining({ user, onClose }) {
       setIsUploadComplete(true);
 
       dismiss(uploadToast);
-      showSuccess("All voice samples uploaded successfully to Cloudinary! 🎉");
+      showSuccess("All voice samples uploaded successfully! 🎉");
     } catch (error) {
       dismiss(uploadToast);
-      showError(`Upload failed: ${error.message || "Please try again."}`);
+      showError(`Upload failed: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -204,11 +257,11 @@ export default function VoiceTraining({ user, onClose }) {
   const handleTrainModel = async () => {
     if (isSubmitting || !isUploadComplete || isModelTrained) return;
 
-    const trainingToast = showLoading("Starting voice model training...");
+    const trainingToast = showLoading("Training voice model...");
     setIsSubmitting(true);
 
     try {
-      const username = user?.username || "sample"; // Use authenticated user's username
+      const username = user?.username || "sample";
       const externalApiUrl = `https://voice-recognition-api.onrender.com/api/v1/test_user?username=${username}`;
 
       const response = await fetch(externalApiUrl, {
@@ -216,7 +269,6 @@ export default function VoiceTraining({ user, onClose }) {
         headers: {
           "Content-Type": "application/json",
         },
-        // Send the array of Cloudinary URLs as the request body
         body: JSON.stringify(cloudinaryUrls),
       });
 
@@ -230,25 +282,24 @@ export default function VoiceTraining({ user, onClose }) {
       }
 
       setIsModelTrained(true);
-      showSuccess(
-        "Voice model trained successfully! Authentication is now configured. 🎉"
-      );
+      showSuccess("Voice model trained successfully! 🎉");
     } catch (error) {
       dismiss(trainingToast);
-      showError(error.message || "Failed to initiate voice model training.");
+      showError(error.message || "Failed to train voice model.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const resetVoiceTraining = () => {
-    setRecordedAudioIds([]);
+    setRecordedAudioBlobs([]);
     setCloudinaryUrls([]);
     setIsUploadComplete(false);
     setIsModelTrained(false);
     setHasRecording(false);
     setIsRecording(false);
     setRecordingTime(0);
+    currentRecordingRef.current = null;
     showInfo("Voice training progress reset.");
   };
 
@@ -256,8 +307,8 @@ export default function VoiceTraining({ user, onClose }) {
     setShowVoiceTraining(false);
   };
 
-  // Logic to determine the main button's text and action
-  const isAllRecorded = recordedAudioIds.length === TOTAL_SENTENCES;
+  // Button logic
+  const isAllRecorded = recordedAudioBlobs.length === TOTAL_SENTENCES;
   let mainButtonAction = startRecording;
   let mainButtonText = "Start Voice Training";
   let mainButtonIcon = <Mic className="w-5 h-5 mr-2" />;
@@ -269,28 +320,18 @@ export default function VoiceTraining({ user, onClose }) {
   } else if (isAllRecorded) {
     if (!isUploadComplete) {
       mainButtonAction = handleUploadVoices;
-      mainButtonText = isSubmitting
-        ? "Uploading Voices..."
-        : "Upload The Voices";
-      mainButtonIcon = isSubmitting ? (
-        <Brain className="w-5 h-5 mr-2 animate-pulse" />
-      ) : (
-        <Brain className="w-5 h-5 mr-2" />
-      );
+      mainButtonText = isSubmitting ? "Uploading..." : "Upload Voices";
+      mainButtonIcon = <Brain className="w-5 h-5 mr-2" />;
     } else {
       mainButtonAction = handleTrainModel;
-      mainButtonText = isSubmitting ? "Training Model..." : "Train Voice Model";
-      mainButtonIcon = isSubmitting ? (
-        <Brain className="w-5 h-5 mr-2 animate-pulse" />
-      ) : (
-        <Brain className="w-5 h-5 mr-2" />
-      );
+      mainButtonText = isSubmitting ? "Training..." : "Train Model";
+      mainButtonIcon = <Brain className="w-5 h-5 mr-2" />;
     }
   }
 
   return (
     <>
-      {/* Voice Training Section in Settings */}
+      {/* Settings Card */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
@@ -299,16 +340,15 @@ export default function VoiceTraining({ user, onClose }) {
           </CardTitle>
           <CardDescription>
             Train your personal voice model for enhanced authentication
-            accuracy. This is a one-time setup process.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="bg-muted/50 rounded-lg p-4">
             <h4 className="font-medium mb-2">Training Process:</h4>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Speak {TOTAL_SENTENCES} different sentences clearly</li>
+              <li>• Record {TOTAL_SENTENCES} different sentences clearly</li>
               <li>• Each recording has a 10-second limit</li>
-              <li>• Voice matching is verified in real-time</li>
+              <li>• Voice validation happens in real-time</li>
               <li>• Complete all sentences to train your model</li>
             </ul>
           </div>
@@ -323,18 +363,18 @@ export default function VoiceTraining({ user, onClose }) {
             {isModelTrained ? "Training Complete" : "Start Voice Training"}
           </Button>
 
-          {recordedAudioIds.length > 0 && !isModelTrained && (
+          {recordedAudioBlobs.length > 0 && !isModelTrained && (
             <div className="text-center">
               <p className="text-sm font-medium text-primary">
-                Progress: {recordedAudioIds.length}/{TOTAL_SENTENCES} sentences
-                recorded
+                Progress: {recordedAudioBlobs.length}/{TOTAL_SENTENCES}{" "}
+                sentences recorded
               </p>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Voice Training Dialog */}
+      {/* Training Dialog */}
       <Dialog open={showVoiceTraining} onOpenChange={setShowVoiceTraining}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -344,8 +384,8 @@ export default function VoiceTraining({ user, onClose }) {
             </DialogTitle>
             <DialogDescription>
               {isModelTrained
-                ? "Your voice model is ready to use for authentication."
-                : `Complete all ${TOTAL_SENTENCES} sentences to train your personalized voice model`}
+                ? "Your voice model is ready for authentication."
+                : `Complete all ${TOTAL_SENTENCES} sentences to train your model`}
             </DialogDescription>
           </DialogHeader>
 
@@ -353,26 +393,24 @@ export default function VoiceTraining({ user, onClose }) {
             {/* Progress Bar */}
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="font-medium">Training Progress</span>
+                <span className="font-medium">Progress</span>
                 <span className="text-muted-foreground">
-                  {recordedAudioIds.length}/{TOTAL_SENTENCES} completed
+                  {recordedAudioBlobs.length}/{TOTAL_SENTENCES} completed
                 </span>
               </div>
               <div className="w-full bg-muted rounded-full h-3">
                 <div
-                  className={`bg-${
-                    isModelTrained ? "green-600" : "primary"
-                  } h-3 rounded-full transition-all duration-500 flex items-center justify-end pr-2`}
+                  className="bg-primary h-3 rounded-full transition-all duration-500 flex items-center justify-end pr-2"
                   style={{
                     width: `${
-                      (recordedAudioIds.length / TOTAL_SENTENCES) * 100
+                      (recordedAudioBlobs.length / TOTAL_SENTENCES) * 100
                     }%`,
                   }}
                 >
-                  {recordedAudioIds.length > 0 && (
+                  {recordedAudioBlobs.length > 0 && (
                     <span className="text-xs text-primary-foreground font-medium">
                       {Math.round(
-                        (recordedAudioIds.length / TOTAL_SENTENCES) * 100
+                        (recordedAudioBlobs.length / TOTAL_SENTENCES) * 100
                       )}
                       %
                     </span>
@@ -381,21 +419,20 @@ export default function VoiceTraining({ user, onClose }) {
               </div>
             </div>
 
-            {/* Main Content Area */}
+            {/* Main Content */}
             {isModelTrained ? (
-              <Card className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20">
+              <Card className="border-green-200 bg-green-50">
                 <CardContent className="pt-6">
-                  <div className="text-center space-y-6">
-                    <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
-                      <Check className="w-10 h-10 text-green-500" />
+                  <div className="text-center space-y-4">
+                    <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
+                      <Check className="w-8 h-8 text-green-500" />
                     </div>
-                    <div className="space-y-2">
-                      <h3 className="text-xl font-bold text-green-600 dark:text-green-400">
-                        Model Ready! 🎉
+                    <div>
+                      <h3 className="text-xl font-bold text-green-600">
+                        Training Complete! 🎉
                       </h3>
                       <p className="text-muted-foreground">
-                        Your personalized voice model is active and ready for
-                        authentication.
+                        Your voice model is ready.
                       </p>
                     </div>
                   </div>
@@ -403,37 +440,35 @@ export default function VoiceTraining({ user, onClose }) {
               </Card>
             ) : (
               <>
-                {/* Current Sentence Card */}
+                {/* Current Sentence */}
                 <Card className="border-primary/20 bg-primary/5">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-center text-lg">
-                      Sentence {recordedAudioIds.length + 1} of{" "}
+                      Sentence {recordedAudioBlobs.length + 1} of{" "}
                       {TOTAL_SENTENCES}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-center space-y-4">
-                      <div className="text-3xl font-bold p-6 bg-background/50 rounded-lg border-2 border-dashed border-primary/30">
-                        "{trainingSentences[recordedAudioIds.length]}"
+                      <div className="text-2xl font-bold p-4 bg-background/50 rounded-lg border-2 border-dashed">
+                        "{trainingSentences[recordedAudioBlobs.length]}"
                       </div>
-
                       <p className="text-sm text-muted-foreground">
                         {isAllRecorded
-                          ? "All required sentences have been recorded."
-                          : "Click the microphone button and speak the sentence above clearly and naturally"}
+                          ? "All sentences recorded. Ready to upload!"
+                          : "Click record and speak clearly"}
                       </p>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Recording Controls (Hidden if all are recorded, use main action button below) */}
+                {/* Recording Controls */}
                 {!isAllRecorded && (
                   <div className="text-center space-y-4">
                     {!isRecording && !hasRecording && (
                       <Button
                         onClick={startRecording}
                         size="lg"
-                        className="w-40"
                         disabled={isSubmitting}
                       >
                         <Mic className="w-5 h-5 mr-2" />
@@ -451,7 +486,7 @@ export default function VoiceTraining({ user, onClose }) {
                         </div>
                         <div className="w-full bg-muted rounded-full h-2">
                           <div
-                            className="bg-red-500 h-2 rounded-full transition-all duration-1000"
+                            className="bg-red-500 h-2 rounded-full transition-all"
                             style={{ width: `${(recordingTime / 10) * 100}%` }}
                           />
                         </div>
@@ -459,7 +494,6 @@ export default function VoiceTraining({ user, onClose }) {
                           onClick={stopRecording}
                           variant="secondary"
                           size="lg"
-                          disabled={isSubmitting}
                         >
                           <MicOff className="w-5 h-5 mr-2" />
                           Stop Recording
@@ -471,29 +505,23 @@ export default function VoiceTraining({ user, onClose }) {
                       <div className="space-y-4">
                         <div className="flex items-center justify-center space-x-2">
                           <Check className="w-5 h-5 text-green-500" />
-                          <span className="text-lg font-medium">
-                            Recording completed
-                          </span>
+                          <span>Recording completed</span>
                         </div>
                         <div className="flex gap-3 justify-center">
                           <Button
                             onClick={submitRecording}
                             size="lg"
-                            className="px-8"
                             disabled={isSubmitting}
                           >
-                            {isSubmitting
-                              ? "Submitting..."
-                              : "Submit Recording"}
+                            {isSubmitting ? "Validating..." : "Submit"}
                           </Button>
                           <Button
                             onClick={() => setHasRecording(false)}
                             variant="outline"
                             size="lg"
-                            disabled={isSubmitting}
                           >
                             <RotateCcw className="w-4 h-4 mr-2" />
-                            Record Again
+                            Re-record
                           </Button>
                         </div>
                       </div>
@@ -503,35 +531,24 @@ export default function VoiceTraining({ user, onClose }) {
               </>
             )}
 
-            {/* Completed Sentences List */}
-            {recordedAudioIds.length > 0 && (
+            {/* Completed Sentences */}
+            {recordedAudioBlobs.length > 0 && (
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base text-green-600">
-                    ✓ Recorded & Matched Sentences
+                    ✓ Recorded Sentences
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {recordedAudioIds.map((id, index) => (
+                    {recordedAudioBlobs.map((blob, index) => (
                       <div
-                        key={id}
-                        className="flex items-center gap-3 text-sm bg-green-50 dark:bg-green-950/20 p-2 rounded"
+                        key={index}
+                        className="flex items-center gap-3 text-sm bg-green-50 p-2 rounded"
                       >
-                        <Check className="w-4 h-4 text-green-500 shrink-0" />
+                        <Check className="w-4 h-4 text-green-500" />
                         <span className="font-medium">#{index + 1}:</span>
                         <span>"{trainingSentences[index]}"</span>
-                        {isUploadComplete && (
-                          <span className="text-xs text-muted-foreground ml-auto">
-                            Uploaded:{" "}
-                            {
-                              cloudinaryUrls[index]
-                                .split("/")
-                                .pop()
-                                .split("?")[0]
-                            }
-                          </span>
-                        )}
                       </div>
                     ))}
                   </div>
@@ -553,29 +570,20 @@ export default function VoiceTraining({ user, onClose }) {
                 </Button>
               )}
 
-              {recordedAudioIds.length > 0 && !isModelTrained && (
+              {recordedAudioBlobs.length > 0 && !isModelTrained && (
                 <Button
                   variant="outline"
                   onClick={resetVoiceTraining}
-                  className={
-                    isAllRecorded && !isModelTrained ? "flex-1" : "w-full"
-                  }
                   disabled={isSubmitting}
                 >
                   <RotateCcw className="w-4 h-4 mr-2" />
-                  Reset Training
+                  Reset
                 </Button>
               )}
 
-              {(!isAllRecorded || isModelTrained) && (
-                <Button
-                  variant="outline"
-                  onClick={handleCloseTraining}
-                  className="flex-1"
-                >
-                  Close
-                </Button>
-              )}
+              <Button variant="outline" onClick={handleCloseTraining}>
+                Close
+              </Button>
             </div>
           </div>
         </DialogContent>

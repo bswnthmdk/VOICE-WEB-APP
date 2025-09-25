@@ -15,23 +15,43 @@ export const uploadOnCloudinary = async (
     });
 
     if (!localFilePath) return null;
-    console.log("Uploading to cloudinary: ");
+
+    console.log("Uploading to cloudinary:", localFilePath);
 
     const result = await cloudinary.uploader.upload(localFilePath, {
-      resource_type: "video", // required for audio
+      resource_type: "video", // Required for audio files
       folder: folderName,
       use_filename: true,
-      context: { owner: userName },
+      unique_filename: true, // Ensure unique filenames
+      context: {
+        owner: userName,
+        uploaded_at: new Date().toISOString(),
+      },
+      // Add tags for better organization
+      tags: [`voice-training`, `user-${userName}`],
     });
-    console.log("Successfully uploaded to Cloudinary");
 
-    if (fs.existsSync(localFilePath)) fs.unlinkSync(localFilePath);
+    console.log("Successfully uploaded to Cloudinary:", result.public_id);
 
-    return result.secure_url;
+    // Clean up local file
+    if (fs.existsSync(localFilePath)) {
+      fs.unlinkSync(localFilePath);
+      console.log("Local file cleaned up:", localFilePath);
+    }
+
+    // Return the complete result object, not just the URL
+    return result;
   } catch (error) {
     console.error("Cloudinary upload failed:", error);
-    if (fs.existsSync(localFilePath)) fs.unlinkSync(localFilePath);
+
+    // Clean up local file even if upload fails
+    if (fs.existsSync(localFilePath)) {
+      fs.unlinkSync(localFilePath);
+      console.log("Local file cleaned up after error:", localFilePath);
+    }
+
     throw error;
   }
 };
+
 export default cloudinary;
