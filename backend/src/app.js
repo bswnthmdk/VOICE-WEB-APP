@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import userRoutes from "./routes/user.route.js";
+import audioRouter from "./routes/audio.route.js";
 
 const app = express();
 
@@ -52,6 +53,9 @@ app.get("/health", (req, res) => {
 // Register routes
 app.use(`${API_BASE}/users`, userRoutes);
 console.log("User routes registered at:", `${API_BASE}/users`);
+
+app.use(`${API_BASE}/audio`, audioRoutes);
+console.log("Audio routes registered at:", `${API_BASE}/audio`);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
