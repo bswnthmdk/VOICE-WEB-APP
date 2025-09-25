@@ -179,8 +179,8 @@ export default function Profile({ user, onLogout, onUserUpdate }) {
           </DialogHeader>
 
           <div className="space-y-6">
-            {/* Voice Training Component */}
-            <VoiceTraining onClose={() => setShowSettings(false)} />
+            {/* Voice Training Component: Now receives user prop */}
+            <VoiceTraining user={user} onClose={() => setShowSettings(false)} />
 
             {/* Profile Settings Component */}
             <ProfileSettings
