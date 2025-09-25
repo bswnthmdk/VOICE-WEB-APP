@@ -441,7 +441,7 @@ export default function VoiceTraining({ user, onClose }) {
             ) : (
               <>
                 {/* Current Sentence - Only show if not all recorded */}
-                {!isAllRecorded ? (
+                {!isAllRecorded && (
                   <Card className="border-primary/20 bg-primary/5">
                     <CardHeader className="pb-3">
                       <CardTitle className="text-center text-lg">
@@ -457,24 +457,6 @@ export default function VoiceTraining({ user, onClose }) {
                         <p className="text-sm text-muted-foreground">
                           Click record and speak clearly
                         </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20">
-                    <CardContent className="pt-6">
-                      <div className="text-center space-y-4">
-                        <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
-                          <Check className="w-8 h-8 text-green-500" />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-bold text-green-600 dark:text-green-400">
-                            All sentences recorded! 🎉
-                          </h3>
-                          <p className="text-muted-foreground">
-                            Ready to upload your voice samples to Cloudinary
-                          </p>
-                        </div>
                       </div>
                     </CardContent>
                   </Card>
