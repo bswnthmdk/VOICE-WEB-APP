@@ -39,17 +39,18 @@ export const uploadTrainingAudio = async (req, res) => {
     }
 
     console.log("🎵 Uploading audio file:", {
-      filename: req.file.filename,
+      filename: req.file.originalname,
       mimetype: req.file.mimetype,
       size: req.file.size,
       owner: ownerName,
     });
 
-    // Upload to Cloudinary (returns full result object now)
+    // Upload buffer to Cloudinary (no temp file needed)
     const uploadResult = await uploadOnCloudinary(
-      req.file.path,
+      req.file.buffer, // Use buffer instead of path
       PROJECT_FOLDER,
-      ownerName
+      ownerName,
+      req.file.originalname
     );
 
     if (!uploadResult) {
@@ -61,7 +62,7 @@ export const uploadTrainingAudio = async (req, res) => {
 
     console.log("✅ Upload successful:", uploadResult.public_id);
 
-    // Return success response with proper data
+    // Return success response
     res.json({
       success: true,
       message: "File uploaded successfully",
@@ -70,7 +71,7 @@ export const uploadTrainingAudio = async (req, res) => {
       owner: ownerName,
       uploadedAt: uploadResult.created_at,
       format: uploadResult.format,
-      duration: uploadResult.duration, // Available for audio files
+      duration: uploadResult.duration,
     });
   } catch (error) {
     console.error("❌ Upload error:", error);
