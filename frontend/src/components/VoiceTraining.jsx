@@ -440,27 +440,45 @@ export default function VoiceTraining({ user, onClose }) {
               </Card>
             ) : (
               <>
-                {/* Current Sentence */}
-                <Card className="border-primary/20 bg-primary/5">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-center text-lg">
-                      Sentence {recordedAudioBlobs.length + 1} of{" "}
-                      {TOTAL_SENTENCES}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center space-y-4">
-                      <div className="text-2xl font-bold p-4 bg-background/50 rounded-lg border-2 border-dashed">
-                        "{trainingSentences[recordedAudioBlobs.length]}"
+                {/* Current Sentence - Only show if not all recorded */}
+                {!isAllRecorded ? (
+                  <Card className="border-primary/20 bg-primary/5">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-center text-lg">
+                        Sentence {recordedAudioBlobs.length + 1} of{" "}
+                        {TOTAL_SENTENCES}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center space-y-4">
+                        <div className="text-2xl font-bold p-4 bg-background/50 rounded-lg border-2 border-dashed">
+                          "{trainingSentences[recordedAudioBlobs.length]}"
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Click record and speak clearly
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {isAllRecorded
-                          ? "All sentences recorded. Ready to upload!"
-                          : "Click record and speak clearly"}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20">
+                    <CardContent className="pt-6">
+                      <div className="text-center space-y-4">
+                        <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
+                          <Check className="w-8 h-8 text-green-500" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-green-600 dark:text-green-400">
+                            All sentences recorded! 🎉
+                          </h3>
+                          <p className="text-muted-foreground">
+                            Ready to upload your voice samples to Cloudinary
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Recording Controls */}
                 {!isAllRecorded && (

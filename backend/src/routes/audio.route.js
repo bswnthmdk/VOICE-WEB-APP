@@ -6,7 +6,6 @@ import { verifyAccessToken } from "../middlewares/auth.middleware.js";
 import {
   uploadTrainingAudio,
   listTrainingAudio,
-  deleteTrainingAudio,
 } from "../controllers/audio.controller.js";
 
 const audioRouter = express.Router();
@@ -19,8 +18,8 @@ audioRouter
 audioRouter.route("/list-audio").get(verifyAccessToken, listTrainingAudio);
 
 // New delete endpoint (optional)
-audioRouter
-  .route("/delete-audio/:publicId")
-  .delete(verifyAccessToken, deleteTrainingAudio);
+// audioRouter
+//   .route("/delete-audio/:publicId")
+//   .delete(verifyAccessToken, deleteTrainingAudio);
 
 export default audioRouter;

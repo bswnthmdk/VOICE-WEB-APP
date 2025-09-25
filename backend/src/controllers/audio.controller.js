@@ -126,41 +126,41 @@ export const listTrainingAudio = async (req, res) => {
 };
 
 // New endpoint to delete training audio (optional)
-export const deleteTrainingAudio = async (req, res) => {
-  try {
-    const { publicId } = req.params;
+// export const deleteTrainingAudio = async (req, res) => {
+//   try {
+//     const { publicId } = req.params;
 
-    if (!publicId) {
-      return res.status(400).json({
-        success: false,
-        message: "Public ID is required",
-      });
-    }
+//     if (!publicId) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Public ID is required",
+//       });
+//     }
 
-    console.log("🗑️ Deleting audio file:", publicId);
+//     console.log("🗑️ Deleting audio file:", publicId);
 
-    const result = await cloudinary.uploader.destroy(publicId, {
-      resource_type: "video", // Required for audio files
-    });
+//     const result = await cloudinary.uploader.destroy(publicId, {
+//       resource_type: "video", // Required for audio files
+//     });
 
-    if (result.result === "ok") {
-      console.log("✅ Audio file deleted successfully");
-      res.json({
-        success: true,
-        message: "Audio file deleted successfully",
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        message: "Failed to delete audio file",
-      });
-    }
-  } catch (error) {
-    console.error("❌ Delete error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error during deletion",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
-  }
-};
+//     if (result.result === "ok") {
+//       console.log("✅ Audio file deleted successfully");
+//       res.json({
+//         success: true,
+//         message: "Audio file deleted successfully",
+//       });
+//     } else {
+//       res.status(400).json({
+//         success: false,
+//         message: "Failed to delete audio file",
+//       });
+//     }
+//   } catch (error) {
+//     console.error("❌ Delete error:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Internal server error during deletion",
+//       error: process.env.NODE_ENV === "development" ? error.message : undefined,
+//     });
+//   }
+// };
