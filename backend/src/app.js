@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import userRoutes from "./routes/user.route.js";
-import audioRouter from "./routes/audio.route.js";
+import audioRoutes from "./routes/audio.route.js";
 
 const app = express();
 
